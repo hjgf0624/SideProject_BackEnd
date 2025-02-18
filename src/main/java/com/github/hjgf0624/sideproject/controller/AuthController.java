@@ -21,6 +21,16 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import com.github.hjgf0624.sideproject.dto.EmailAuthRequest;
+import com.github.hjgf0624.sideproject.dto.PhoneAuthRequest;
+import com.github.hjgf0624.sideproject.service.EmailAuthService;
+import com.github.hjgf0624.sideproject.service.SmsAuthService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Collections;
+import java.util.Map;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,9 +40,13 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/auth")
 @AllArgsConstructor
+@RequiredArgsConstructor
 public class AuthController {
+  
     private final UserService userService;
     private final JwtTokenProvider jwtTokenProvider;
+    private final EmailAuthService emailAuthService;
+    private final SmsAuthService smsAuthService;
 
     @Operation(summary = "회원가입", description = "회원가입을 진행합니다.")
     @ApiResponses(value = {
@@ -68,5 +82,16 @@ public class AuthController {
 
         return ResponseEntity.ok(dto);
     }
+  
+    @PostMapping("/emailAuth")
+    public ResponseEntity<Map<String, String>> emailAuth(@RequestBody EmailAuthRequest request) {
+        String code = emailAuthService.sendEmailAuthCode(request.getEmail());
+        return ResponseEntity.ok(Collections.singletonMap("code", code)); // 프론트에서 관리
+    }
 
+    @PostMapping("/phoneAuth")
+    public ResponseEntity<Map<String, String>> phoneAuth(@RequestBody PhoneAuthRequest request) {
+        String code = smsAuthService.sendSmsAuthCode(request.getPhone());
+        return ResponseEntity.ok(Collections.singletonMap("code", code)); // 프론트에서 관리
+    }
 }
