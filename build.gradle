@@ -27,6 +27,24 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+
+	// Swagger 의존성 설정
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
+
+	// Spring Security 의존성 설정
+	implementation 'org.springframework.security:spring-security-crypto:5.7.1'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+
+	implementation 'org.mariadb.jdbc:mariadb-java-client:3.1.2'
+
+	// JWT 의존성 설정
+	implementation 'io.jsonwebtoken:jjwt:0.9.1'
+	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+	implementation 'javax.xml.bind:jaxb-api:2.3.0'
+
+	// S3 의존성 설정
+	implementation 'software.amazon.awssdk:s3:2.20.52'
+
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
