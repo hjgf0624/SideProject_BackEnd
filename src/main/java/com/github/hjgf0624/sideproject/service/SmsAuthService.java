@@ -1,6 +1,7 @@
 package com.github.hjgf0624.sideproject.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.OutputStream;
@@ -12,10 +13,18 @@ import java.util.concurrent.ThreadLocalRandom;
 @Service
 @RequiredArgsConstructor
 public class SmsAuthService {
-    private final String accessKey;
-    private final String secretKey;
-    private final String serviceId;
-    private final String senderPhone;
+
+    @Value("${sms.access-key}")
+    private String accessKey;
+
+    @Value("${sms.secret-key}")
+    private String secretKey;
+
+    @Value("${sms.service-id}")
+    private String serviceId;
+
+    @Value("${sms.sender-phone}")
+    private String senderPhone;;
 
     public String sendSmsAuthCode(String phone) {
         String code = generateCode();

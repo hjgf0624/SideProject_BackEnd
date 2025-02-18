@@ -39,7 +39,6 @@ import java.util.List;
 @Tag(name = "auth", description = "보안과 관련된 API 입니다.")
 @RestController
 @RequestMapping("/api/auth")
-@AllArgsConstructor
 @RequiredArgsConstructor
 public class AuthController {
   
