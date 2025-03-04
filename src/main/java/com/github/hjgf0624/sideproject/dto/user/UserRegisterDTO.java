@@ -34,21 +34,5 @@ public class UserRegisterDTO {
     private String birthDate;
 
     @Schema(description = "프로필 정보")
-    private ProfileDTO profile;
-
-    @Getter
-    @Setter
-    @Schema(description = "프로필 정보 DTO")
-    public static class ProfileDTO {
-
-        @Schema(description = "이름", example = "홍길동")
-        private String name;
-
-        @Schema(description = "닉네임", example = "길동이")
-        private String nickname;
-
-        @JsonProperty("phone_number") // JSON에서는 "phone_number"로 받음
-        @Schema(description = "전화번호", example = "010-1234-5678")
-        private String phoneNumber;
-    }
+    private UserProfileDTO profile;
 }
