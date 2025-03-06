@@ -14,4 +14,7 @@ public interface MessageRepository extends JpaRepository<MessageEntity, Long> {
             + "ST_GeomFromText(CONCAT('POINT(', :longitude, ' ', :latitude, ')'), 4326), "
             + "ST_GeomFromText(CONCAT('POINT(', m.longitude, ' ', m.latitude, ')'), 4326)) * 111000 < 10000")
     List<MessageEntity> findNearbyMessages(@Param("latitude") double latitude, @Param("longitude") double longitude);
+  
+    int countByMessageId(int messageId);
 }
+

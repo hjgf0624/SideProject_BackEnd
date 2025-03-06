@@ -7,13 +7,25 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(CustomValidationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ValidationErrorResponseDTO handleCustomValidationException(CustomValidationException e) {
-        return ValidationErrorResponseDTO.of(e.getErrors());
+    public Map<String, Object> handleCustomValidationException(CustomValidationException e) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", false);
+        response.put("message", e.getMessage());
+
+        if (e.getErrors() != null && !e.getErrors().isEmpty()) {
+            response.put("errors", e.getErrors());
+        }
+
+        return response;
     }
 
 }

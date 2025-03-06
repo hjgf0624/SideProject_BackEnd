@@ -3,37 +3,61 @@ package com.github.hjgf0624.sideproject.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Formula;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Entity
+
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Entity
+@ToString
 @Table(name="job_message")
 public class MessageEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "message_id")
     private Long messageId;
 
+    @Column(name = "category_id")
+    private Integer categoryId;
+
+    @Column(name = "user_id", length = 60, nullable = false)
+    private String userId;
+
     @Column(name = "title", length = 40, nullable = false)
     private String title;
 
-    @Column(name = "content")
+    @Column(name = "content", columnDefinition = "TEXT", nullable = false)
     private String content;
 
-    @Column(name = "create_at")
-    private LocalDateTime createdAt;
+    @Column(name = "meeting_date_time", nullable = false)
+    private LocalDateTime meetingDateTime;
 
     @Column(name = "recruit_count")
-    private int capacityMemberNum;  // 모집하는 총 인원 수
+    private Integer recruitCount;
 
-    @Formula("(SELECT COUNT(*) FROM job_participant jp WHERE jp.message_id = id)")
-    private int currentMemberNum;   // 현재 참여한 인원 수
+    @Column(name = "latitude")
+    private Double latitude;
 
-    //@ElementCollection
-    //private List<String> memberList; // 참여 멤버 리스트
+    @Column(name = "longitude")
+    private Double longitude;
+
+    @Column(name = "anonymous")
+    private boolean anonymous;
+
+    @Column(name = "views", nullable = false)
+    private Integer views = 0;
+
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt = LocalDateTime.now();
+
+    @OneToMany(mappedBy = "message", cascade = CascadeType.ALL)
+    private List<MessageParticipantEntity> participants;
 }
+

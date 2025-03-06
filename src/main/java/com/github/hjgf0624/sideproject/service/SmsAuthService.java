@@ -13,6 +13,7 @@ import java.util.concurrent.ThreadLocalRandom;
 @Service
 @RequiredArgsConstructor
 public class SmsAuthService {
+
     @Value("${sms.access-key}")
     private String accessKey;
 
@@ -24,6 +25,7 @@ public class SmsAuthService {
 
     @Value("${sms.sender-phone}")
     private String senderPhone;
+
 
     public String sendSmsAuthCode(String phone) {
         String code = generateCode();

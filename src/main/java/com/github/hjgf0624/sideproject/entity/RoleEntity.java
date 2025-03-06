@@ -21,5 +21,4 @@ public class RoleEntity {
 
     @Column(name = "role_name", length = 20, nullable = false)
     private String roleName;
-
 }
