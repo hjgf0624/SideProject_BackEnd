@@ -1,5 +1,11 @@
 package com.github.hjgf0624.sideproject.controller;
 
+import com.github.hjgf0624.sideproject.dto.msg.MsgDetailRequest;
+import com.github.hjgf0624.sideproject.dto.msg.MsgDetailResponse;
+import com.github.hjgf0624.sideproject.service.MessageService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+
 import com.github.hjgf0624.sideproject.dto.BaseResponseDTO;
 import com.github.hjgf0624.sideproject.dto.message.*;
 import com.github.hjgf0624.sideproject.service.MessageService;
@@ -23,6 +29,13 @@ public class MessageController {
 
     private final MessageService messageService;
 
+    @PostMapping("/msgDetail")
+    public MsgDetailResponse getMessageDetail(@RequestBody MsgDetailRequest request) {
+        return messageService.getMessageDetail(request);
+    }
+
+    private final MessageService messageService;
+
     @Operation
     @PostMapping("/sendMessages")
     public ResponseEntity<BaseResponseDTO<MessageResponseDTO>> saveMessage(@RequestBody MessageRequestDTO messageRequestDTO) {
@@ -42,3 +55,4 @@ public class MessageController {
     }
 
 }
+

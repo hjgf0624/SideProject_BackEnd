@@ -2,9 +2,10 @@ package com.github.hjgf0624.sideproject.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-
+import org.hibernate.annotations.Formula;
 import java.time.LocalDateTime;
 import java.util.List;
+
 
 @Getter
 @Setter
@@ -18,7 +19,7 @@ public class MessageEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "message_id")
-    private Integer messageId;
+    private Long messageId;
 
     @Column(name = "category_id")
     private Integer categoryId;
@@ -59,3 +60,4 @@ public class MessageEntity {
     @OneToMany(mappedBy = "message", cascade = CascadeType.ALL)
     private List<MessageParticipantEntity> participants;
 }
+

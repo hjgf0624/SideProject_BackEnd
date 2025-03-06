@@ -1,5 +1,9 @@
 package com.github.hjgf0624.sideproject.config.security;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.*;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,15 +25,18 @@ import java.util.List;
 public class JwtTokenProvider {
 
     private final StringRedisTemplate stringRedisTemplate;
+
     @Value("spring.jwt.secret")
     private String secretKey;
 
     // 토큰 유효시간 ( 현재 1 시간 )
+    // 250306 수정요필요
+    private long tokenValidTime = 1000L * 60 * 60;
+
     private final long tokenValidTime = 1000L * 60;
 
     // 24시간
     private final long refreshTokenValidity = 1000L * 60 * 60 * 24;
-
 
     private final UserDetailsService userDetailsService;
 
@@ -51,6 +58,7 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+
     public String createRefreshToken(String userPK) {
         Date now = new Date();
 
@@ -66,6 +74,7 @@ public class JwtTokenProvider {
     }
 
     public String getUserPK(String token) {
+        return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody().getSubject();
         try {
             return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody().getSubject();
         } catch (ExpiredJwtException e) {

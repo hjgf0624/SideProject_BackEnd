@@ -20,4 +20,5 @@ public class CustomValidationException extends RuntimeException{
         super(message);
         this.errors = null;
     }
+
 }

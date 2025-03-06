@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.boot.autoconfigure.task.TaskExecutionProperties;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.time.LocalDateTime;
@@ -44,10 +45,10 @@ public class UserEntity {
 //    private String interests; // 관심사, TEXT
 
     @Column(name = "latitude", nullable = true)
-    private Double latitude = 0.0; // 위도, FLOAT
+    private Float latitude = 0.0f; // 위도, FLOAT
 
     @Column(name = "longitude", nullable = true)
-    private Double longitude = 0.0; // 경도, FLOAT
+    private Float longitude = 0.0f; // 경도, FLOAT
 
     @Column(name = "nickname", length = 60)
     private String nickname; // 닉네임, VARCHAR(60)
@@ -91,6 +92,7 @@ public class UserEntity {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<MessageParticipantEntity> participants;
+
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(

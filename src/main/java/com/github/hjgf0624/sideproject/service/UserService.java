@@ -1,5 +1,14 @@
 package com.github.hjgf0624.sideproject.service;
 
+import com.github.hjgf0624.sideproject.dto.BaseResponseDTO;
+import com.github.hjgf0624.sideproject.dto.user.UserLoginDTO;
+import com.github.hjgf0624.sideproject.dto.user.UserLoginResponseDTO;
+import com.github.hjgf0624.sideproject.dto.user.UserRegisterDTO;
+import com.github.hjgf0624.sideproject.dto.user.UserRegisterResponseDTO;
+import com.github.hjgf0624.sideproject.entity.RoleEntity;
+import com.github.hjgf0624.sideproject.entity.UserEntity;
+import com.github.hjgf0624.sideproject.exception.CustomValidationException;
+
 import com.github.hjgf0624.sideproject.config.security.JwtTokenProvider;
 import com.github.hjgf0624.sideproject.dto.BaseResponseDTO;
 import com.github.hjgf0624.sideproject.dto.LocationDTO;
@@ -17,6 +26,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -34,7 +45,6 @@ public class UserService {
 
     private static final String EMAIL_REGEX = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
     private static final String BIRTH_REGEX = "^(19|20)\\d\\d-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$";
-
 
     public UserEntity toEntity(UserRegisterDTO dto, MultipartFile file) throws IOException {
         String profileImageUrl = file != null ?
@@ -88,17 +98,14 @@ public class UserService {
         System.out.println("userId: " + userId);
 
         if (jwtTokenProvider.isBlacklisted(accessToken)) {
-            System.out.println("블랙리스트 들어옴");
             throw new CustomValidationException("Token is blacklisted");
         }
 
         if (!jwtTokenProvider.validateRefreshToken(refreshToken)) {
-            System.out.println("토큰 형식 맞는지 체크함 ");
             throw new CustomValidationException("Invalid refresh token");
         }
 
         if (!jwtTokenProvider.isTokenExpired(accessToken)) {
-            System.out.println("만료 췤~");
             throw new CustomValidationException("Not expired access token");
         }
 
@@ -147,8 +154,6 @@ public class UserService {
         String refreshToken = jwtTokenProvider.createRefreshToken(savedUserInfo.getUserId());
 
         refreshTokenRepository.saveRefreshToken(savedUserInfo.getUserId(), refreshToken);
-
-        System.out.println(refreshTokenRepository.getRefreshToken(savedUserInfo.getUserId()));
 
         UserLoginResponseDTO userResponseDto = UserLoginResponseDTO.builder()
                 .email(savedUserInfo.getUserId())

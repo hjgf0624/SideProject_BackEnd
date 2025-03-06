@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.hjgf0624.sideproject.dto.LocationDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
-
 import java.time.LocalDateTime;
 
 @Getter
@@ -29,6 +28,7 @@ public class UserRegisterResponseDTO {
 
     @Schema(description = "프로필 정보")
     @JsonProperty("profile")
+
     private UserProfileDTO profile;
 
     @Schema(description = "위치 정보")
@@ -38,4 +38,5 @@ public class UserRegisterResponseDTO {
     @Schema(description = "계정 생성 시각 (ISO-8601 형식)")
     @JsonProperty("created_at")
     private LocalDateTime createdAt;
+  
 }

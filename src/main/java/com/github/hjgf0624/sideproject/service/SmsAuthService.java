@@ -24,7 +24,8 @@ public class SmsAuthService {
     private String serviceId;
 
     @Value("${sms.sender-phone}")
-    private String senderPhone;;
+    private String senderPhone;
+
 
     public String sendSmsAuthCode(String phone) {
         String code = generateCode();

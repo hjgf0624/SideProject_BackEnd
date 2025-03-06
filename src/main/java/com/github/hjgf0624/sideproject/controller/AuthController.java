@@ -1,5 +1,22 @@
 package com.github.hjgf0624.sideproject.controller;
 
+import com.github.hjgf0624.sideproject.config.security.JwtTokenProvider;
+import com.github.hjgf0624.sideproject.dto.BaseResponseDTO;
+import com.github.hjgf0624.sideproject.dto.user.UserLoginDTO;
+import com.github.hjgf0624.sideproject.dto.user.UserLoginResponseDTO;
+import com.github.hjgf0624.sideproject.dto.user.UserRegisterDTO;
+import com.github.hjgf0624.sideproject.dto.user.UserRegisterResponseDTO;
+import com.github.hjgf0624.sideproject.entity.RoleEntity;
+import com.github.hjgf0624.sideproject.entity.UserEntity;
+import com.github.hjgf0624.sideproject.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
 import com.github.hjgf0624.sideproject.dto.BaseResponseDTO;
 import com.github.hjgf0624.sideproject.dto.LocationDTO;
 import com.github.hjgf0624.sideproject.dto.user.*;
@@ -23,14 +40,18 @@ import java.util.Collections;
 import java.util.Map;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 @Tag(name = "auth", description = "보안과 관련된 API 입니다.")
 @RestController
 @RequestMapping("/api/auth")
+//@AllArgsConstructor
 @RequiredArgsConstructor
 public class AuthController {
   
     private final UserService userService;
+    private final JwtTokenProvider jwtTokenProvider;
     private final EmailAuthService emailAuthService;
     private final SmsAuthService smsAuthService;
 

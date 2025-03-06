@@ -33,6 +33,5 @@ public class UserRegisterDTO {
     @Schema(description = "생년월일", example = "1995-08-25")
     private String birthDate;
 
-    @Schema(description = "프로필 정보")
     private UserProfileDTO profile;
 }
