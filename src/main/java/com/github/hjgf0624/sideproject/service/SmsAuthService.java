@@ -1,5 +1,6 @@
 package com.github.hjgf0624.sideproject.service;
 
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.nurigo.sdk.NurigoApp;
@@ -20,13 +21,19 @@ public class SmsAuthService {
 
     private static final SecureRandom secureRandom = new SecureRandom();
 
-    private final DefaultMessageService messageService;
+    private DefaultMessageService messageService;
 
     @Value("${sms.sender-phone}")
     private String senderPhone;
 
-    public SmsAuthService(@Value("{sms.api-key}") String apiKey,
-                          @Value("{sms.secret-key}") String apiSecret) {
+    @Value("${sms.access-key}")
+    private String apiKey;
+
+    @Value("${sms.secret-key}")
+    private String apiSecret;
+
+    @PostConstruct
+    public void init() {
         this.messageService = NurigoApp.INSTANCE.initialize(apiKey, apiSecret, "https://api.coolsms.co.kr");
     }
 

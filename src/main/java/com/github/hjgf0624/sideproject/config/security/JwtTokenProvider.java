@@ -33,8 +33,6 @@ public class JwtTokenProvider {
     // 250306 수정요필요
     private long tokenValidTime = 1000L * 60 * 60;
 
-    private final long tokenValidTime = 1000L * 60;
-
     // 24시간
     private final long refreshTokenValidity = 1000L * 60 * 60 * 24;
 
@@ -74,7 +72,6 @@ public class JwtTokenProvider {
     }
 
     public String getUserPK(String token) {
-        return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody().getSubject();
         try {
             return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody().getSubject();
         } catch (ExpiredJwtException e) {

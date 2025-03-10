@@ -2,6 +2,7 @@ package com.github.hjgf0624.sideproject.service;
 
 import com.github.hjgf0624.sideproject.dto.msg.MsgDetailRequest;
 import com.github.hjgf0624.sideproject.dto.msg.MsgDetailResponse;
+import com.github.hjgf0624.sideproject.dto.user.UserProfileDTO;
 import com.github.hjgf0624.sideproject.entity.MessageEntity;
 import com.github.hjgf0624.sideproject.repository.MessageRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -70,9 +72,12 @@ public class MessageService {
                 .title(message.getTitle())
                 .content(message.getContent())
                 .createdAt(message.getCreatedAt())
-                .capacityMemberNum(message.getCapacityMemberNum())
-                .currentMemberNum(message.getCurrentMemberNum())
-                //.memberList(message.getMemberList())
+                .capacityMemberNum(message.getRecruitCount())
+                .currentMemberNum(messageParticipantRepository.countByMessage_MessageId(message.getMessageId()))
+                .memberList(message.getParticipants().stream()
+                        .map(MessageParticipantEntity::getUser)
+                        .map(user -> new UserProfileDTO(user.getUserId(), user.getNickname(), user.getProfileImageUrl(), user.getPhoneNumber()))
+                        .collect(Collectors.toList()))
                 .build();
     }
 
@@ -106,41 +111,30 @@ public class MessageService {
                 .createdAt(savedMessage.getCreatedAt())
                 .build();
 
-        // 게시글 반경 10km 이내의 유저를 구하는 로직!
-//        double minLat = savedMessage.getLatitude() - 0.09;
-//        double maxLat = savedMessage.getLatitude() + 0.09;
-//        double minLng = savedMessage.getLongitude() - 0.09;
-//        double maxLng = savedMessage.getLongitude() + 0.09;
-//
-//        List<UserEntity> nearUsers = userRepository.findUsersWithinLatLngRange(minLat, maxLat, minLng, maxLng);
-
         return BaseResponseDTO.success(responseDTO, "data")
                 .addField("message", "Message created successfully")
                 .addField("isExist", false);
     }
 
-    public BaseResponseDTO<MessageGetResponseDTO> getMessage(MessageGetRequestDTO dto) throws CustomValidationException {
-        MessageEntity message = messageRepository.findById(dto.getMessageId()).orElse(null);
+    public BaseResponseDTO<List<MessageGetResponseDTO>> getMessage(MessageGetRequestDTO dto) throws CustomValidationException {
+        List<MessageEntity> messages = messageRepository.findUserMessagesByDate(dto.getUserId(), dto.getDate());
 
-        if (message == null) {
-            throw new CustomValidationException("메세지 ID가 없습니다.");
+        if (messages.isEmpty()) {
+            return null;
         }
 
-        String date = message.getMeetingDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-        String time = message.getMeetingDateTime().format(DateTimeFormatter.ofPattern("HH:mm"));
-
-        int currentCount = messageRepository.countByMessageId(message.getMessageId());
-
-        MessageGetResponseDTO responseDTO = MessageGetResponseDTO.builder()
-                .date(date)
-                .time(time)
-                .title(message.getTitle())
-                .contents(message.getContent())
-                .recruitCount(MessageGetResponseDTO.RecruitCount.builder()
-                        .current(currentCount)
-                        .max(message.getRecruitCount())
+        List<MessageGetResponseDTO> responseDTO = messages.stream()
+                .map(msg -> MessageGetResponseDTO.builder()
+                        .date(msg.getMeetingDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+                        .time(msg.getMeetingDateTime().format(DateTimeFormatter.ofPattern("HH:mm")))
+                        .title(msg.getTitle())
+                        .contents(msg.getContent())
+                        .recruitCount(MessageGetResponseDTO.RecruitCount.builder()
+                                .current(messageParticipantRepository.countByMessage_MessageId(msg.getMessageId()))
+                                .max(msg.getRecruitCount())
+                                .build())
                         .build())
-                .build();
+                .toList();
 
         return BaseResponseDTO.success(responseDTO, "message");
     }

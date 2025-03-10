@@ -14,7 +14,7 @@ public class JoinMessageDTO {
 
     @Schema(description = "생성된 메시지의 고유 ID")
     @JsonProperty("message_id")
-    private Integer messageId;
+    private Long messageId;
 
     @Schema(description = "생성된 사용자 고유 ID")
     @JsonProperty("user_id")

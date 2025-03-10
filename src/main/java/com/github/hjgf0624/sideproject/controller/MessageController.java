@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import software.amazon.awssdk.services.s3.endpoints.internal.Value;
 
+import java.util.List;
 import java.util.Map;
 
 @Tag(name = "message", description = "메세지와 관련된 API 입니다.")
@@ -34,8 +35,6 @@ public class MessageController {
         return messageService.getMessageDetail(request);
     }
 
-    private final MessageService messageService;
-
     @Operation
     @PostMapping("/sendMessages")
     public ResponseEntity<BaseResponseDTO<MessageResponseDTO>> saveMessage(@RequestBody MessageRequestDTO messageRequestDTO) {
@@ -50,7 +49,7 @@ public class MessageController {
 
     @Operation
     @PostMapping("/getMessages")
-    public ResponseEntity<BaseResponseDTO<MessageGetResponseDTO>> getMessages(@RequestBody MessageGetRequestDTO dto) {
+    public ResponseEntity<BaseResponseDTO<List<MessageGetResponseDTO>>> getMessages(@RequestBody MessageGetRequestDTO dto) {
         return ResponseEntity.ok(messageService.getMessage(dto));
     }
 

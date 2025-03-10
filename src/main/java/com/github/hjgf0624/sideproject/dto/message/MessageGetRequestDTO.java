@@ -15,9 +15,9 @@ import java.time.LocalDate;
 @Schema(description = "메시지 검색 요청 DTO")
 public class MessageGetRequestDTO {
 
-    @Schema(description = "생성된 메시지의 고유 ID")
-    @JsonProperty("message_id")
-    private Integer messageId;
+    @Schema(description = "사용자 ID")
+    @JsonProperty("user_id")
+    private String userId;
 
     @Schema(description = "생성된 메시지의 날짜", example = "2024-04-21")
     @JsonProperty("date")

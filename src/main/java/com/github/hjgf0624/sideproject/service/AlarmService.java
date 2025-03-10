@@ -1,6 +1,6 @@
 package com.github.hjgf0624.sideproject.service;
 
-import com.github.hjgf0624.sideproject.dto.LocationDto;
+import com.github.hjgf0624.sideproject.dto.LocationDTO;
 import com.github.hjgf0624.sideproject.dto.alarm.AlarmResponse;
 import com.github.hjgf0624.sideproject.entity.MessageEntity;
 import com.github.hjgf0624.sideproject.repository.MessageRepository;
@@ -16,9 +16,17 @@ public class AlarmService {
     private final MessageRepository messageRepository;
 
     // 특정 사용자의 알람 리스트 조회 (위치 기반)
-    public List<AlarmResponse> getAlarmList(String userId, LocationDto location) {
+    public List<AlarmResponse> getAlarmList(String userId, LocationDTO location) {
         double latitude = location.getLatitude();
         double longitude = location.getLongitude();
+
+        // 게시글 반경 10km 이내의 유저를 구하는 로직!
+//        double minLat = savedMessage.getLatitude() - 0.09;
+//        double maxLat = savedMessage.getLatitude() + 0.09;
+//        double minLng = savedMessage.getLongitude() - 0.09;
+//        double maxLng = savedMessage.getLongitude() + 0.09;
+//
+//        List<UserEntity> nearUsers = userRepository.findUsersWithinLatLngRange(minLat, maxLat, minLng, maxLng);
 
         // 가까운 메시지를 찾기 위해 적절한 거리 기준을 설정
         List<MessageEntity> messages = messageRepository.findNearbyMessages(latitude, longitude);

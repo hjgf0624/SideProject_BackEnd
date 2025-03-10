@@ -20,5 +20,5 @@ public class MessageParticipantId implements Serializable {
     private String userId;
 
     @Column(name = "message_id")
-    private Integer messageId;
+    private Long messageId;
 }

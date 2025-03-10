@@ -141,7 +141,7 @@ public class UserService {
     public BaseResponseDTO<UserLoginResponseDTO> login(UserLoginDTO dto) {
         UserEntity savedUserInfo = userRepository.findByUserId(dto.getEmail());
 
-        if (savedUserInfo == null || passwordEncoder.matches(savedUserInfo.getUserPw(), passwordEncoder.encode(dto.getPassword()))) {
+        if (savedUserInfo == null || !passwordEncoder.matches(savedUserInfo.getUserPw(), passwordEncoder.encode(dto.getPassword()))) {
             throw new CustomValidationException("Invalid credentials");
         }
 
@@ -245,8 +245,8 @@ public class UserService {
     @Transactional
     public BaseResponseDTO<UserProfileDTO> updateProfileInfo(UserProfileUpdateDTO dto, MultipartFile file) throws IOException {
 
-        String profileImageUrl = file != null ? awsS3Service.uploadFile(file, dto.getUserId()) : null;
         UserEntity userEntity = userRepository.findByUserId(dto.getUserId());
+        String profileImageUrl = file != null ? awsS3Service.uploadFile(file, dto.getUserId()) : userEntity.getProfileImageUrl();
 
         userEntity.setName(dto.getName());
         userEntity.setNickname(dto.getNickname());
@@ -263,10 +263,6 @@ public class UserService {
                 .build();
 
         return BaseResponseDTO.success(updateDTO, "user_profile").addField("message", "프로필 정보 업데이트 성공.");
-    }
-
-    public UserEntity findUserById(String email) {
-        return userRepository.findByUserId(email);
     }
 
 }

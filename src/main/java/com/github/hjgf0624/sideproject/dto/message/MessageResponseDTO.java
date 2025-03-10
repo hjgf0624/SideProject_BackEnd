@@ -19,7 +19,7 @@ public class MessageResponseDTO {
 
     @Schema(description = "생성된 메시지의 고유 ID")
     @JsonProperty("message_id")
-    private Integer messageId;
+    private Long messageId;
 
     @Schema(description = "메시지를 작성한 사용자 ID")
     @JsonProperty("user_id")
