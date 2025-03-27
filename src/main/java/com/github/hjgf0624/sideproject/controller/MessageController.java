@@ -1,23 +1,20 @@
 package com.github.hjgf0624.sideproject.controller;
 
-import com.github.hjgf0624.sideproject.dto.msg.MsgDetailRequest;
-import com.github.hjgf0624.sideproject.dto.msg.MsgDetailResponse;
+import com.github.hjgf0624.sideproject.dto.msg.MsgDetailRequestDTO;
+import com.github.hjgf0624.sideproject.dto.msg.MsgDetailResponseDTO;
+import com.github.hjgf0624.sideproject.service.MessageBroadcastService;
 import com.github.hjgf0624.sideproject.service.MessageService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
 
 import com.github.hjgf0624.sideproject.dto.BaseResponseDTO;
 import com.github.hjgf0624.sideproject.dto.message.*;
-import com.github.hjgf0624.sideproject.service.MessageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import software.amazon.awssdk.services.s3.endpoints.internal.Value;
 
 import java.util.List;
 import java.util.Map;
@@ -29,9 +26,10 @@ import java.util.Map;
 public class MessageController {
 
     private final MessageService messageService;
+    private final MessageBroadcastService messageBroadcastService;
 
     @PostMapping("/msgDetail")
-    public MsgDetailResponse getMessageDetail(@RequestBody MsgDetailRequest request) {
+    public MsgDetailResponseDTO getMessageDetail(@RequestBody MsgDetailRequestDTO request) {
         return messageService.getMessageDetail(request);
     }
 
@@ -39,6 +37,12 @@ public class MessageController {
     @PostMapping("/sendMessages")
     public ResponseEntity<BaseResponseDTO<MessageResponseDTO>> saveMessage(@RequestBody MessageRequestDTO messageRequestDTO) {
         return ResponseEntity.ok(messageService.saveMessage(messageRequestDTO));
+    }
+
+    @Operation
+    @PostMapping("/broadcasting")
+    public ResponseEntity<Map<String, Object>> sendBroadcastMessage(@RequestBody MessageBroadcastRequestDTO request) {
+        return ResponseEntity.ok(messageBroadcastService.broadcastMessage(request));
     }
 
     @Operation

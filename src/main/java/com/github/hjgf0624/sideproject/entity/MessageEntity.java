@@ -33,6 +33,9 @@ public class MessageEntity {
     @Column(name = "content", columnDefinition = "TEXT", nullable = false)
     private String content;
 
+    @Column(name = "profileImg")
+    private String profileImg;
+
     @Column(name = "meeting_date_time", nullable = false)
     private LocalDateTime meetingDateTime;
 
