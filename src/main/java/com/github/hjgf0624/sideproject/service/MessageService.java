@@ -1,7 +1,8 @@
 package com.github.hjgf0624.sideproject.service;
 
-import com.github.hjgf0624.sideproject.dto.msg.MsgDetailRequest;
-import com.github.hjgf0624.sideproject.dto.msg.MsgDetailResponse;
+import com.github.hjgf0624.sideproject.dto.UserDTO;
+import com.github.hjgf0624.sideproject.dto.msg.MsgDetailRequestDTO;
+import com.github.hjgf0624.sideproject.dto.msg.MsgDetailResponseDTO;
 import com.github.hjgf0624.sideproject.dto.user.UserProfileDTO;
 import com.github.hjgf0624.sideproject.entity.MessageEntity;
 import com.github.hjgf0624.sideproject.repository.MessageRepository;
@@ -10,21 +11,15 @@ import org.springframework.stereotype.Service;
 import com.github.hjgf0624.sideproject.dto.BaseResponseDTO;
 import com.github.hjgf0624.sideproject.dto.LocationDTO;
 import com.github.hjgf0624.sideproject.dto.message.*;
-import com.github.hjgf0624.sideproject.entity.MessageEntity;
 import com.github.hjgf0624.sideproject.entity.MessageParticipantEntity;
 import com.github.hjgf0624.sideproject.entity.MessageParticipantId;
 import com.github.hjgf0624.sideproject.entity.UserEntity;
 import com.github.hjgf0624.sideproject.exception.CustomValidationException;
 import com.github.hjgf0624.sideproject.repository.MessageParticipantRepository;
-import com.github.hjgf0624.sideproject.repository.MessageRepository;
 import com.github.hjgf0624.sideproject.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import software.amazon.awssdk.services.s3.endpoints.internal.Value;
 
-import javax.xml.bind.ValidationException;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
@@ -58,7 +53,7 @@ public class MessageService {
         return messageEntity;
     }
 
-    public MsgDetailResponse getMessageDetail(MsgDetailRequest request) {
+    public MsgDetailResponseDTO getMessageDetail(MsgDetailRequestDTO request) {
         Optional<MessageEntity> messageOpt = messageRepository.findById(request.getMessageId());
 
         if (messageOpt.isEmpty()) {
@@ -67,7 +62,7 @@ public class MessageService {
 
         MessageEntity message = messageOpt.get();
 
-        return MsgDetailResponse.builder()
+        return MsgDetailResponseDTO.builder()
                 .success(true)
                 .title(message.getTitle())
                 .content(message.getContent())
@@ -112,7 +107,7 @@ public class MessageService {
                 .build();
 
         return BaseResponseDTO.success(responseDTO, "data")
-                .addField("message", "Message created successfully")
+                .addField("message", "메시지 생성 성공")
                 .addField("isExist", false);
     }
 

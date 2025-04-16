@@ -11,4 +11,10 @@ import java.util.List;
 @Repository
 public interface UserRepository extends JpaRepository<UserEntity, String> {
     UserEntity findByUserId(String username);
+
+    @Query(value = """
+        SELECT * FROM users
+        WHERE ST_Distance_Sphere(Point(:longitude, :latitude), Point(longitude, latitude)) < 10000
+        """, nativeQuery = true)
+    List<UserEntity> findNearbyUsers(@Param("latitude") double latitude, @Param("longitude") double longitude);
 }

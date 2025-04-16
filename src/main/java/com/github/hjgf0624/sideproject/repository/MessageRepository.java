@@ -17,6 +17,7 @@ public interface MessageRepository extends JpaRepository<MessageEntity, Long> {
         WHERE ST_Distance_Sphere(Point(:longitude, :latitude),Point(longitude, latitude)) < 10000""", nativeQuery = true)
     List<MessageEntity> findNearbyMessages(@Param("latitude") double latitude, @Param("longitude") double longitude);
 
+
     @Query("""
         SELECT m FROM MessageEntity m
         WHERE m.messageId IN (

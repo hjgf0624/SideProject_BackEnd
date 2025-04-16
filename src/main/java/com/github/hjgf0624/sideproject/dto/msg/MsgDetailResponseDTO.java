@@ -1,7 +1,6 @@
 package com.github.hjgf0624.sideproject.dto.msg;
 
 import com.github.hjgf0624.sideproject.dto.user.UserProfileDTO;
-import com.github.hjgf0624.sideproject.entity.UserEntity;
 import lombok.Builder;
 import lombok.Getter;
 import java.time.LocalDateTime;
@@ -9,7 +8,7 @@ import java.util.List;
 
 @Getter
 @Builder
-public class MsgDetailResponse {
+public class MsgDetailResponseDTO {
     private boolean success;
     private String title;
     private String content;

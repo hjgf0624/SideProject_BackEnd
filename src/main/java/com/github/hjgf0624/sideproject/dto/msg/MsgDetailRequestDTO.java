@@ -5,6 +5,6 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class MsgDetailRequest {
+public class MsgDetailRequestDTO {
     private Long messageId;  // 메시지 고유 ID
 }
