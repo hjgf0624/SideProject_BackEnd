@@ -14,6 +14,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 @Service
 @RequiredArgsConstructor
 public class MessageBroadcastService {
@@ -21,6 +24,8 @@ public class MessageBroadcastService {
     private final MessageRepository messageRepository;
     private final UserFcmTokenRepository userFcmTokenRepository;
     private final FCMService fcmService;
+
+    final static Logger logger = LogManager.getLogger(MessageBroadcastService.class);
 
     // 메시지 브로드캐스트 처리
     @Transactional
@@ -47,7 +52,7 @@ public class MessageBroadcastService {
                     );
                 } catch (Exception e) {
                     // 예외 처리 (FCM 전송 실패시 등, printStackTrace 대신 다른 Logger 사용해야 할 듯)
-                    e.printStackTrace();
+                    logger.error("예외 발생 : {}",e.getMessage(), e);
                 }
             });
         }

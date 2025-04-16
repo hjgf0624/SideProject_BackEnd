@@ -3,7 +3,6 @@ package com.github.hjgf0624.sideproject.service;
 import com.google.firebase.messaging.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import java.util.List;
 
 @Service
 public class FCMService {
@@ -15,15 +14,15 @@ public class FCMService {
         this.firebaseMessaging = firebaseMessaging;
     }
 
-    public void sendBroadcastMessage(String title, String content, List<String> tokens) {
-        if (tokens.isEmpty()) {
+    public void sendBroadcastMessage(String title, String content, String token) {
+        if (token.isEmpty()) {
             System.out.println("토큰을 사용할 수 없습니다.");
             return;
         }
 
         MulticastMessage message = MulticastMessage.builder()
                 .setNotification(Notification.builder().setTitle(title).setBody(content).build())
-                .addAllTokens(tokens)
+                .addToken(token)
                 .build();
 
         try {
