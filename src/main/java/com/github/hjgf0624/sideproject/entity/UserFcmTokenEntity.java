@@ -1,12 +1,9 @@
 package com.github.hjgf0624.sideproject.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
-import java.util.List;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "user_fcm_tokens")
@@ -14,6 +11,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 
 public class UserFcmTokenEntity {
 
@@ -22,8 +20,17 @@ public class UserFcmTokenEntity {
     private Long id;
 
     @OneToOne
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false, unique = true)
     private UserEntity user;
 
-    private List<String> fcmToken;
+    @Column(name = "fcm_token", nullable = false, length = 512)
+    private String fcmToken;
+
+    @Column(name = "updated_at", nullable = false,
+            columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
+    private LocalDateTime updatedAt;
+
+    @Column(name = "created_at", nullable = false,
+            columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
+    private LocalDateTime createdAt;
 }

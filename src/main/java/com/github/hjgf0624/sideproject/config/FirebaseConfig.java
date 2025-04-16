@@ -14,7 +14,7 @@ public class FirebaseConfig {
     @PostConstruct
     public void initFirebase() throws IOException {
         FileInputStream serviceAccount =
-                new FileInputStream("JSONFILE 경로 집어넣기");
+                new FileInputStream("src/main/resources/sideproject-1b8b1-firebase-adminsdk-fbsvc-ac4d64b750.json");
 
         FirebaseOptions options = FirebaseOptions.builder()
                 .setCredentials(GoogleCredentials.fromStream(serviceAccount))
