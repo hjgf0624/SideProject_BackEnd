@@ -1,7 +1,7 @@
 package com.github.hjgf0624.sideproject.service;
 
 import com.google.firebase.messaging.*;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -9,7 +9,6 @@ public class FCMService {
 
     private final FirebaseMessaging firebaseMessaging;
 
-    @Autowired
     public FCMService(FirebaseMessaging firebaseMessaging) {
         this.firebaseMessaging = firebaseMessaging;
     }

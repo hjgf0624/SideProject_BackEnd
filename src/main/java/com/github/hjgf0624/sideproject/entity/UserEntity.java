@@ -68,9 +68,6 @@ public class UserEntity {
     @Column(name = "profile_image_url", length = 255)
     private String profileImageUrl;
 
-    @Column(name = "firebase_token", length = 255)
-    private String firebaseToken;
-
     @Column(name = "created_at", updatable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime createdAt; // 생성시간, TIMESTAMP DEFAULT CURRENT_TIMESTAMP

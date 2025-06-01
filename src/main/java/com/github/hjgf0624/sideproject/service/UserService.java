@@ -43,6 +43,8 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
 
+    private final UserFcmTokenService userFcmTokenService;
+
     private static final String EMAIL_REGEX = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
     private static final String BIRTH_REGEX = "^(19|20)\\d\\d-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$";
 
@@ -55,7 +57,7 @@ public class UserService {
 
         userEntity.setUserId(dto.getEmail());
         userEntity.setUserPw(passwordEncoder.encode(dto.getPassword()));
-        userEntity.setFirebaseToken(dto.getFcmToken());
+//        userEntity.setFirebaseToken(dto.getFcmToken());
         userEntity.setBirthdate(dto.getBirthDate());
 
         if (dto.getProfile() != null) {
@@ -90,12 +92,7 @@ public class UserService {
         String accessToken = reIssueTokenDTO.getAccessToken();
         String refreshToken = reIssueTokenDTO.getRefreshToken();
 
-        System.out.println("accessToken: " + accessToken);
-        System.out.println("refreshToken: " + refreshToken);
-
         String userId = jwtTokenProvider.getUserPK(accessToken);
-
-        System.out.println("userId: " + userId);
 
         if (jwtTokenProvider.isBlacklisted(accessToken)) {
             throw new CustomValidationException("Token is blacklisted");
@@ -141,9 +138,18 @@ public class UserService {
     public BaseResponseDTO<UserLoginResponseDTO> login(UserLoginDTO dto) {
         UserEntity savedUserInfo = userRepository.findByUserId(dto.getEmail());
 
-        if (savedUserInfo == null || !passwordEncoder.matches(savedUserInfo.getUserPw(), passwordEncoder.encode(dto.getPassword()))) {
+        if (savedUserInfo == null) {
+            throw new CustomValidationException("User not found");
+        }
+
+        String savedPw = savedUserInfo.getUserPw();
+        String inputPw = dto.getPassword();
+
+        if (!passwordEncoder.matches(inputPw, savedPw)) {
             throw new CustomValidationException("Invalid credentials");
         }
+
+//        userFcmTokenService.saveOrUpdateToken(dto.getEmail(), dto.getFcmToken());
 
         List<String> sAuthList = new ArrayList<>();
         for (RoleEntity role : savedUserInfo.getRoles()) {

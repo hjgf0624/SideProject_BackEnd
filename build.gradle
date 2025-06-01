@@ -51,7 +51,6 @@ dependencies {
 	// FCM 의존성 설정
 	implementation 'com.google.firebase:firebase-admin:9.2.0'
 
-
 	implementation 'net.nurigo:sdk:4.3.0'
 
 	compileOnly 'org.projectlombok:lombok'

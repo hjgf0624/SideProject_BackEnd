@@ -6,13 +6,12 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "user_fcm_tokens")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-
+@Table(name = "user_fcm_tokens")
 public class UserFcmTokenEntity {
 
     @Id
