@@ -21,6 +21,7 @@ public class CustomUser extends User {
 
     public CustomUser(UserEntity user) {
         super(user.getUserId(), user.getUserPw(), user.getAuthorities());
+        this.user = user;
     }
 
     public String getUserId() {

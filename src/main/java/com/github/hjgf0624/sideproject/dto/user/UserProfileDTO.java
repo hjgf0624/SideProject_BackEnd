@@ -1,6 +1,7 @@
 package com.github.hjgf0624.sideproject.dto.user;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.hjgf0624.sideproject.dto.LocationDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
@@ -27,5 +28,8 @@ public class UserProfileDTO {
     @Schema(description = "사용자 전화번호", example = "010-1234-5678")
     @JsonProperty("phone_number")
     private String phoneNumber;
+
+    @Schema(description = "사용자 위치")
+    private LocationDTO location;
 }
 

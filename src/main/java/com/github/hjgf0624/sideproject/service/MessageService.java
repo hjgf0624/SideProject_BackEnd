@@ -53,6 +53,27 @@ public class MessageService {
         return messageEntity;
     }
 
+    public BaseResponseDTO<List<MessageGetResponseDTO>> getMessages(Double longitude, Double latitude) {
+        List<MessageEntity> nearMessages = messageRepository.findNearbyMessages(longitude, latitude);
+
+        List<MessageGetResponseDTO> responseDTO = nearMessages.stream()
+                .map(msg -> MessageGetResponseDTO.builder()
+                        .date(msg.getMeetingDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+                        .time(msg.getMeetingDateTime().format(DateTimeFormatter.ofPattern("HH:mm")))
+                        .title(msg.getTitle())
+                        .contents(msg.getContent())
+                        .location(LocationDTO.builder().longitude(msg.getLongitude()).latitude(msg.getLatitude()).build())
+                        .recruitCount(MessageGetResponseDTO.RecruitCount.builder()
+                                .current(messageParticipantRepository.countByMessage_MessageId(msg.getMessageId()))
+                                .max(msg.getRecruitCount())
+                                .build())
+                        .build())
+                .toList();
+
+        return BaseResponseDTO.success(responseDTO, "messages");
+        
+    }
+
     public MsgDetailResponseDTO getMessageDetail(MsgDetailRequestDTO request) {
         Optional<MessageEntity> messageOpt = messageRepository.findById(request.getMessageId());
 
@@ -71,7 +92,12 @@ public class MessageService {
                 .currentMemberNum(messageParticipantRepository.countByMessage_MessageId(message.getMessageId()))
                 .memberList(message.getParticipants().stream()
                         .map(MessageParticipantEntity::getUser)
-                        .map(user -> new UserProfileDTO(user.getUserId(), user.getNickname(), user.getProfileImageUrl(), user.getPhoneNumber()))
+                        .map(user -> new UserProfileDTO(
+                                user.getUserId(),
+                                user.getNickname(),
+                                user.getProfileImageUrl(),
+                                user.getPhoneNumber(),
+                                new LocationDTO(user.getLatitude(), user.getLongitude())))
                         .collect(Collectors.toList()))
                 .build();
     }
@@ -124,6 +150,7 @@ public class MessageService {
                         .time(msg.getMeetingDateTime().format(DateTimeFormatter.ofPattern("HH:mm")))
                         .title(msg.getTitle())
                         .contents(msg.getContent())
+                        .location(LocationDTO.builder().longitude(msg.getLongitude()).latitude(msg.getLatitude()).build())
                         .recruitCount(MessageGetResponseDTO.RecruitCount.builder()
                                 .current(messageParticipantRepository.countByMessage_MessageId(msg.getMessageId()))
                                 .max(msg.getRecruitCount())
