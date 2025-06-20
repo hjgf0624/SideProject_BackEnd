@@ -15,7 +15,7 @@ public interface MessageRepository extends JpaRepository<MessageEntity, Long> {
     @Query(value = """
         SELECT * FROM job_message
         WHERE ST_Distance_Sphere(Point(:longitude, :latitude),Point(longitude, latitude)) < 10000""", nativeQuery = true)
-    List<MessageEntity> findNearbyMessages(@Param("latitude") double latitude, @Param("longitude") double longitude);
+    List<MessageEntity> findNearbyMessages(@Param("longitude") double longitude, @Param("latitude") double latitude);
 
 
     @Query("""

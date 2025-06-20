@@ -241,6 +241,10 @@ public class UserService {
                 .nickname(userEntity.getNickname())
                 .profileImageUrl(userEntity.getProfileImageUrl())
                 .phoneNumber(userEntity.getPhoneNumber())
+                .location(LocationDTO.builder()
+                        .latitude(userEntity.getLatitude())
+                        .longitude(userEntity.getLongitude())
+                        .build())
                 .build();
 
         return BaseResponseDTO.success(dto, "user_profile").addField("message", "프로필 정보 불러오기 성공.");
