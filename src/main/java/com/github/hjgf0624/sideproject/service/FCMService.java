@@ -1,7 +1,6 @@
 package com.github.hjgf0624.sideproject.service;
 
 import com.google.firebase.messaging.*;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -26,9 +25,9 @@ public class FCMService {
 
         try {
             BatchResponse response = firebaseMessaging.sendMulticast(message);
-            System.out.println("✅ Successfully sent message to " + response.getSuccessCount() + " users.");
+            System.out.println("✅ 성공적으로 " + response.getSuccessCount() + " 명의 사용자에게 메시지 전달 성공");
         } catch (FirebaseMessagingException e) {
-            System.err.println("❌ Error sending FCM message: " + e.getMessage());
+            System.err.println("❌ FCM 기반 메시지 전송 실패: " + e.getMessage());
         }
     }
 }

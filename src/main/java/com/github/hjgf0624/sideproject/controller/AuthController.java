@@ -1,36 +1,20 @@
 package com.github.hjgf0624.sideproject.controller;
 
 import com.github.hjgf0624.sideproject.config.security.JwtTokenProvider;
-import com.github.hjgf0624.sideproject.dto.BaseResponseDTO;
+import com.github.hjgf0624.sideproject.dto.*;
 import com.github.hjgf0624.sideproject.dto.user.UserLoginDTO;
 import com.github.hjgf0624.sideproject.dto.user.UserLoginResponseDTO;
 import com.github.hjgf0624.sideproject.dto.user.UserRegisterDTO;
 import com.github.hjgf0624.sideproject.dto.user.UserRegisterResponseDTO;
-import com.github.hjgf0624.sideproject.entity.RoleEntity;
-import com.github.hjgf0624.sideproject.entity.UserEntity;
 import com.github.hjgf0624.sideproject.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
 import com.github.hjgf0624.sideproject.dto.BaseResponseDTO;
-import com.github.hjgf0624.sideproject.dto.LocationDTO;
 import com.github.hjgf0624.sideproject.dto.user.*;
-import com.github.hjgf0624.sideproject.service.UserService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-
-import org.apache.coyote.Response;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import com.github.hjgf0624.sideproject.dto.EmailAuthRequest;
-import com.github.hjgf0624.sideproject.dto.PhoneAuthRequest;
 import com.github.hjgf0624.sideproject.service.EmailAuthService;
 import com.github.hjgf0624.sideproject.service.SmsAuthService;
 import lombok.RequiredArgsConstructor;
@@ -40,8 +24,6 @@ import java.util.Collections;
 import java.util.Map;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 @Tag(name = "auth", description = "보안과 관련된 API 입니다.")
 @RestController
@@ -118,6 +100,12 @@ public class AuthController {
     public ResponseEntity<Map<String, String>> phoneAuth(@RequestBody PhoneAuthRequest request) {
         String code = smsAuthService.sendSmsAuthCode(request.getPhone());
         return ResponseEntity.ok(Collections.singletonMap("code", code)); // 프론트에서 관리
+    }
+
+    @Operation(summary = "FCM 토큰 저장 / 갱신")
+    @PostMapping("/fcmTokenSaveOrRefresh")
+    public ResponseEntity<BaseResponseDTO<String>> saveOrUpdateFcmToken(@RequestBody FcmTokenRequestDTO fcmTokenRequestDTO) {
+        return ResponseEntity.ok(userService.saveOrUpdateFcmToken(fcmTokenRequestDTO.getUserId(), fcmTokenRequestDTO.getFcmToken()));
     }
 
 }

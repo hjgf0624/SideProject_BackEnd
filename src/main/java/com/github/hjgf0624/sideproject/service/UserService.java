@@ -5,19 +5,17 @@ import com.github.hjgf0624.sideproject.dto.user.UserLoginDTO;
 import com.github.hjgf0624.sideproject.dto.user.UserLoginResponseDTO;
 import com.github.hjgf0624.sideproject.dto.user.UserRegisterDTO;
 import com.github.hjgf0624.sideproject.dto.user.UserRegisterResponseDTO;
-import com.github.hjgf0624.sideproject.entity.RoleEntity;
-import com.github.hjgf0624.sideproject.entity.UserEntity;
+import com.github.hjgf0624.sideproject.entity.*;
 import com.github.hjgf0624.sideproject.exception.CustomValidationException;
 
 import com.github.hjgf0624.sideproject.config.security.JwtTokenProvider;
-import com.github.hjgf0624.sideproject.dto.BaseResponseDTO;
 import com.github.hjgf0624.sideproject.dto.LocationDTO;
 import com.github.hjgf0624.sideproject.dto.user.*;
 import com.github.hjgf0624.sideproject.entity.RoleEntity;
 import com.github.hjgf0624.sideproject.entity.UserEntity;
-import com.github.hjgf0624.sideproject.exception.CustomValidationException;
 import com.github.hjgf0624.sideproject.repository.RefreshTokenRepository;
 import com.github.hjgf0624.sideproject.repository.RoleRepository;
+import com.github.hjgf0624.sideproject.repository.UserFcmTokenRepository;
 import com.github.hjgf0624.sideproject.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -43,7 +41,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
 
-    private final UserFcmTokenService userFcmTokenService;
+    private final UserFcmTokenRepository userFcmTokenRepository;
 
     private static final String EMAIL_REGEX = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
     private static final String BIRTH_REGEX = "^(19|20)\\d\\d-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$";
@@ -271,6 +269,28 @@ public class UserService {
         return BaseResponseDTO.success(updateDTO, "user_profile").addField("message", "프로필 정보 업데이트 성공.");
     }
 
-    //여기에 saveOrUpdateToken 작성
+    // 2025.06.18 작성
+    @Transactional
+    public BaseResponseDTO<String> saveOrUpdateFcmToken(String userId, String fcmToken) {
+        UserEntity userEntity = userRepository.findByUserId(userId);
+        if (userEntity == null){
+            throw new RuntimeException("사용자를 찾을 수 없습니다.");
+        }
 
+        userFcmTokenRepository.findByUser(userEntity).ifPresentOrElse(
+                existing -> {
+                    existing.setFcmToken(fcmToken);
+                    userFcmTokenRepository.save(existing);
+                },
+                () -> {
+                    UserFcmTokenEntity userFcmTokenEntity = UserFcmTokenEntity.builder()
+                            .user(userEntity)
+                            .fcmToken(fcmToken)
+                            .build();
+                    userFcmTokenRepository.save(userFcmTokenEntity);
+                }
+        );
+        return BaseResponseDTO.success("FCM 토큰 저장 / 갱신 완료", "fcm_token")
+                .addField("message", "FCM 토큰 저장 성공");
+    }
 }

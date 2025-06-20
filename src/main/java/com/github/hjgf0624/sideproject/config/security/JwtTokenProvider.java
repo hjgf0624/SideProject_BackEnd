@@ -26,7 +26,7 @@ public class JwtTokenProvider {
 
     private final StringRedisTemplate stringRedisTemplate;
 
-    @Value("spring.jwt.secret")
+    @Value("${spring.jwt.secret}")
     private String secretKey;
 
     // 토큰 유효시간 ( 현재 1 시간 )

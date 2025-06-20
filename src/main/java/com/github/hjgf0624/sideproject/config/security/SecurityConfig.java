@@ -1,13 +1,15 @@
 package com.github.hjgf0624.sideproject.config.security;
 
+import com.github.hjgf0624.sideproject.config.security.oauth.CustomOAuth2UserService;
+import com.github.hjgf0624.sideproject.config.security.oauth.OAuth2SuccessHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -27,6 +29,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final StringRedisTemplate redisTemplate;
+    private final CustomOAuth2UserService customOAuth2UserService;
 
     private final String[] AUTH_WHITELIST = {
             "/v3/api-docs/**", "/swagger-ui/**", "/swagger-resources/**"
@@ -46,8 +50,6 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-        http.addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
-
         http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
         http.csrf(AbstractHttpConfigurer::disable);
 
@@ -57,11 +59,30 @@ public class SecurityConfig {
         // JwtAuthenticationFilter를 UsernamePasswordAuthenticationFilter 앞에 추가하기!
         http.addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
 
+        http.oauth2Login(oauth2 -> oauth2
+                .defaultSuccessUrl("/oauth2/success", true)
+                .userInfoEndpoint(userInfo -> userInfo
+                        .userService(customOAuth2UserService)
+                )
+                .successHandler(oAuth2SuccessHandler())
+        );
+
         http.authorizeHttpRequests(auth -> auth
                         .requestMatchers(AUTH_WHITELIST).permitAll()
+                        .requestMatchers("/oauth2/**").permitAll()
                         .anyRequest().permitAll());
 
         return http.build();
+    }
+
+//    @Bean
+//    public OAuth2UserService<OAuth2UserRequest, OAuth2User> customOAuth2UserService() {
+//        return new CustomOAuth2UserService();
+//    }
+
+    @Bean
+    public OAuth2SuccessHandler oAuth2SuccessHandler() {
+        return new OAuth2SuccessHandler(jwtTokenProvider, redisTemplate);
     }
 
     private CorsConfigurationSource corsConfigurationSource() {
