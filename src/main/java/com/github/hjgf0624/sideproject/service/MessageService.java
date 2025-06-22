@@ -87,6 +87,7 @@ public class MessageService {
                 .success(true)
                 .title(message.getTitle())
                 .content(message.getContent())
+                .meetingDateTime(message.getMeetingDateTime())
                 .createdAt(message.getCreatedAt())
                 .capacityMemberNum(message.getRecruitCount())
                 .currentMemberNum(messageParticipantRepository.countByMessage_MessageId(message.getMessageId()))
@@ -97,6 +98,8 @@ public class MessageService {
                                 user.getNickname(),
                                 user.getProfileImageUrl(),
                                 user.getPhoneNumber(),
+                                user.getBirthdate(),
+                                user.getSex(),
                                 new LocationDTO(user.getLatitude(), user.getLongitude())))
                         .collect(Collectors.toList()))
                 .build();
@@ -137,7 +140,7 @@ public class MessageService {
                 .addField("isExist", false);
     }
 
-    public BaseResponseDTO<List<MessageGetResponseDTO>> getMessage(MessageGetRequestDTO dto) throws CustomValidationException {
+    public BaseResponseDTO<List<MessageGetResponseDTO>> getMessagesByDate(MessageGetRequestDTO dto) throws CustomValidationException {
         List<MessageEntity> messages = messageRepository.findUserMessagesByDate(dto.getUserId(), dto.getDate());
 
         if (messages.isEmpty()) {

@@ -55,8 +55,8 @@ public class MessageController {
 
     @Operation
     @PostMapping("/getMessagesByDate")
-    public ResponseEntity<BaseResponseDTO<List<MessageGetResponseDTO>>> getMessages(@RequestBody MessageGetRequestDTO dto) {
-        return ResponseEntity.ok(messageService.getMessage(dto));
+    public ResponseEntity<BaseResponseDTO<List<MessageGetResponseDTO>>> getMessagesByDate(@RequestBody MessageGetRequestDTO dto) {
+        return ResponseEntity.ok(messageService.getMessagesByDate(dto));
     }
 
     @Operation(summary = "메세지 가져오기", description = "사용자 기준 주변에서 발급된 전체 메세지를 가져옵니다.")

@@ -12,6 +12,7 @@ public class MsgDetailResponseDTO {
     private boolean success;
     private String title;
     private String content;
+    private LocalDateTime meetingDateTime;
     private LocalDateTime createdAt;
     private int capacityMemberNum;  // 모집하는 총 인원 수
     private int currentMemberNum;   // 현재 참여한 인원 수

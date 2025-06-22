@@ -21,10 +21,10 @@ public class UserLoginDTO {
     )
     private String password;
 
-//    @Schema(
-//            description = "사용자 FCM토큰",
-//            example = "password123"
-//    )
-//    private String fcmToken;
+    @Schema(
+            description = "사용자 FCM토큰",
+            example = "123"
+    )
+    private String fcmToken;
 
 }

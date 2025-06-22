@@ -45,6 +45,7 @@ public class UserService {
 
     private static final String EMAIL_REGEX = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
     private static final String BIRTH_REGEX = "^(19|20)\\d\\d-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$";
+    private final UserFcmTokenService userFcmTokenService;
 
     public UserEntity toEntity(UserRegisterDTO dto, MultipartFile file) throws IOException {
         String profileImageUrl = file != null ?
@@ -79,6 +80,7 @@ public class UserService {
 
         if (ttl > 0) {
             refreshTokenRepository.saveBlackList(accessToken, ttl);
+            userFcmTokenService.deleteToken(userId);
         }
 
         return "success";
@@ -147,7 +149,11 @@ public class UserService {
             throw new CustomValidationException("Invalid credentials");
         }
 
-//        userFcmTokenService.saveOrUpdateToken(dto.getEmail(), dto.getFcmToken());
+        if (dto.getFcmToken() == null) {
+            throw new CustomValidationException("FCM token is null");
+        }
+
+        userFcmTokenService.saveOrUpdateToken(dto.getEmail(), dto.getFcmToken());
 
         List<String> sAuthList = new ArrayList<>();
         for (RoleEntity role : savedUserInfo.getRoles()) {
@@ -259,6 +265,8 @@ public class UserService {
         userEntity.setName(dto.getName());
         userEntity.setNickname(dto.getNickname());
         userEntity.setPhoneNumber(dto.getPhoneNumber());
+        userEntity.setBirthdate(dto.getBirthdate());
+        userEntity.setSex(dto.getSex());
         userEntity.setProfileImageUrl(profileImageUrl);
 
         UserEntity savedUser = userRepository.save(userEntity);
@@ -268,6 +276,8 @@ public class UserService {
                 .nickname(savedUser.getNickname())
                 .profileImageUrl(savedUser.getProfileImageUrl())
                 .phoneNumber(savedUser.getPhoneNumber())
+                .birthdate(savedUser.getBirthdate())
+                .sex(savedUser.getSex())
                 .build();
 
         return BaseResponseDTO.success(updateDTO, "user_profile").addField("message", "프로필 정보 업데이트 성공.");

@@ -35,6 +35,10 @@ public class UserEntity {
 //    @Column(name = "age")
 //    private Integer age; // 나이, INT
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "sex")
+    private SexEntity sex;
+
     @Column(name = "birthdate")
     private String birthdate;
 

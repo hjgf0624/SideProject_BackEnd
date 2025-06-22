@@ -2,8 +2,11 @@ package com.github.hjgf0624.sideproject.dto.user;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.hjgf0624.sideproject.dto.LocationDTO;
+import com.github.hjgf0624.sideproject.entity.SexEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
+
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -28,6 +31,14 @@ public class UserProfileDTO {
     @Schema(description = "사용자 전화번호", example = "010-1234-5678")
     @JsonProperty("phone_number")
     private String phoneNumber;
+
+    @Schema(description = "사용자 생년월일", example = "1999-11-11")
+    @JsonProperty("birthdate")
+    private String birthdate;
+
+    @Schema(description = "사용자 성별", example = "MALE")
+    @JsonProperty("sex")
+    private SexEntity sex;
 
     @Schema(description = "사용자 위치")
     private LocationDTO location;
