@@ -1,6 +1,7 @@
 package com.github.hjgf0624.sideproject.controller;
 
 import com.github.hjgf0624.sideproject.config.security.JwtTokenProvider;
+import com.github.hjgf0624.sideproject.config.security.domain.CustomUser;
 import com.github.hjgf0624.sideproject.dto.*;
 import com.github.hjgf0624.sideproject.dto.user.UserLoginDTO;
 import com.github.hjgf0624.sideproject.dto.user.UserLoginResponseDTO;
@@ -13,6 +14,7 @@ import com.github.hjgf0624.sideproject.dto.BaseResponseDTO;
 import com.github.hjgf0624.sideproject.dto.user.*;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import com.github.hjgf0624.sideproject.service.EmailAuthService;
@@ -106,6 +108,15 @@ public class AuthController {
     @PostMapping("/fcmTokenSaveOrRefresh")
     public ResponseEntity<BaseResponseDTO<String>> saveOrUpdateFcmToken(@RequestBody FcmTokenRequestDTO fcmTokenRequestDTO) {
         return ResponseEntity.ok(userService.saveOrUpdateFcmToken(fcmTokenRequestDTO.getUserId(), fcmTokenRequestDTO.getFcmToken()));
+    }
+
+    @Operation(summary = "회원탈퇴")
+    @PostMapping("/deleteMembership")
+    public ResponseEntity<String> deleteMembership(@RequestHeader("Authorization") String token,
+                                                   @AuthenticationPrincipal CustomUser user) {
+        String userId = user.getUserId();
+        String accessToken = token.substring(7);
+        return ResponseEntity.ok(userService.deleteMemberShip(accessToken, userId));
     }
 
 }

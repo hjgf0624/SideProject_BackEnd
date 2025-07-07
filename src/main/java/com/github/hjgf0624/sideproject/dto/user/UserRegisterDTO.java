@@ -2,6 +2,7 @@ package com.github.hjgf0624.sideproject.dto.user;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.github.hjgf0624.sideproject.entity.SexEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import org.springframework.web.multipart.MultipartFile;

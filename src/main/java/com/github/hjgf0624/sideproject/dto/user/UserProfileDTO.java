@@ -6,8 +6,6 @@ import com.github.hjgf0624.sideproject.entity.SexEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
-import java.time.LocalDateTime;
-
 @Getter
 @Setter
 @AllArgsConstructor
@@ -41,6 +39,7 @@ public class UserProfileDTO {
     private SexEntity sex;
 
     @Schema(description = "사용자 위치")
+    @JsonProperty("location")
     private LocationDTO location;
 }
 
