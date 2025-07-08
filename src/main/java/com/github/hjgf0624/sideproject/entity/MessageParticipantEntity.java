@@ -24,4 +24,8 @@ public class MessageParticipantEntity {
     @MapsId("messageId")
     @JoinColumn(name = "message_id", referencedColumnName = "message_id", insertable = false, updatable = false)
     private MessageEntity message;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "participant_type")
+    private ParticipantTypeEntity participantType;
 }

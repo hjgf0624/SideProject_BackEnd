@@ -4,16 +4,13 @@ import com.github.hjgf0624.sideproject.dto.UserDTO;
 import com.github.hjgf0624.sideproject.dto.msg.MsgDetailRequestDTO;
 import com.github.hjgf0624.sideproject.dto.msg.MsgDetailResponseDTO;
 import com.github.hjgf0624.sideproject.dto.user.UserProfileDTO;
-import com.github.hjgf0624.sideproject.entity.MessageEntity;
+import com.github.hjgf0624.sideproject.entity.*;
 import com.github.hjgf0624.sideproject.repository.MessageRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import com.github.hjgf0624.sideproject.dto.BaseResponseDTO;
 import com.github.hjgf0624.sideproject.dto.LocationDTO;
 import com.github.hjgf0624.sideproject.dto.message.*;
-import com.github.hjgf0624.sideproject.entity.MessageParticipantEntity;
-import com.github.hjgf0624.sideproject.entity.MessageParticipantId;
-import com.github.hjgf0624.sideproject.entity.UserEntity;
 import com.github.hjgf0624.sideproject.exception.CustomValidationException;
 import com.github.hjgf0624.sideproject.repository.MessageParticipantRepository;
 import com.github.hjgf0624.sideproject.repository.UserRepository;
@@ -21,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -53,15 +51,29 @@ public class MessageService {
         return messageEntity;
     }
 
-    public BaseResponseDTO<List<MessageGetResponseDTO>> getMessages(Double longitude, Double latitude) {
+    public BaseResponseDTO<List<MessageGetResponseDTO>> getMessages(String userId, Double longitude, Double latitude) {
         List<MessageEntity> nearMessages = messageRepository.findNearbyMessages(longitude, latitude);
 
         List<MessageGetResponseDTO> responseDTO = nearMessages.stream()
                 .map(msg -> MessageGetResponseDTO.builder()
+                        .id(msg.getMessageId())
                         .date(msg.getMeetingDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
                         .time(msg.getMeetingDateTime().format(DateTimeFormatter.ofPattern("HH:mm")))
                         .title(msg.getTitle())
                         .contents(msg.getContent())
+                        .memberList(msg.getParticipants().stream()
+                                .map(participant -> new MessageParticipantDTO(
+                                        participant.getParticipantType(),
+                                        new UserProfileDTO(
+                                                participant.getUser().getUserId(),
+                                                participant.getUser().getNickname(),
+                                                participant.getUser().getProfileImageUrl(),
+                                                participant.getUser().getPhoneNumber(),
+                                                participant.getUser().getBirthdate(),
+                                                participant.getUser().getSex(),
+                                                new LocationDTO(participant.getUser().getLatitude(), participant.getUser().getLongitude())
+                                        )))
+                        .collect(Collectors.toList()))
                         .location(LocationDTO.builder().longitude(msg.getLongitude()).latitude(msg.getLatitude()).build())
                         .recruitCount(MessageGetResponseDTO.RecruitCount.builder()
                                 .current(messageParticipantRepository.countByMessage_MessageId(msg.getMessageId()))
@@ -92,15 +104,17 @@ public class MessageService {
                 .capacityMemberNum(message.getRecruitCount())
                 .currentMemberNum(messageParticipantRepository.countByMessage_MessageId(message.getMessageId()))
                 .memberList(message.getParticipants().stream()
-                        .map(MessageParticipantEntity::getUser)
-                        .map(user -> new UserProfileDTO(
-                                user.getUserId(),
-                                user.getNickname(),
-                                user.getProfileImageUrl(),
-                                user.getPhoneNumber(),
-                                user.getBirthdate(),
-                                user.getSex(),
-                                new LocationDTO(user.getLatitude(), user.getLongitude())))
+                        .map(participant -> new MessageParticipantDTO(
+                                participant.getParticipantType(),
+                                new UserProfileDTO(
+                                    participant.getUser().getUserId(),
+                                    participant.getUser().getNickname(),
+                                    participant.getUser().getProfileImageUrl(),
+                                    participant.getUser().getPhoneNumber(),
+                                    participant.getUser().getBirthdate(),
+                                    participant.getUser().getSex(),
+                                    new LocationDTO(participant.getUser().getLatitude(), participant.getUser().getLongitude())
+                                )))
                         .collect(Collectors.toList()))
                 .build();
     }
@@ -115,6 +129,7 @@ public class MessageService {
                 .id(participantId)
                 .user(userRepository.findByUserId(dto.getUserId()))
                 .message(message)
+                .participantType(ParticipantTypeEntity.PUBLISHER)
                 .build();
 
         messageParticipantRepository.save(participant);
@@ -149,6 +164,7 @@ public class MessageService {
 
         List<MessageGetResponseDTO> responseDTO = messages.stream()
                 .map(msg -> MessageGetResponseDTO.builder()
+                        .id(msg.getMessageId())
                         .date(msg.getMeetingDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
                         .time(msg.getMeetingDateTime().format(DateTimeFormatter.ofPattern("HH:mm")))
                         .title(msg.getTitle())
@@ -182,6 +198,7 @@ public class MessageService {
                 .id(participantId)
                 .user(user)
                 .message(message)
+                .participantType(ParticipantTypeEntity.PARTICIPANT)
                 .build();
 
         messageParticipantRepository.save(participant);
@@ -189,5 +206,18 @@ public class MessageService {
         return ResponseEntity.ok(Map.of("success", true));
     }
 
+    public BaseResponseDTO<List<String>> getMessageDate(String userId) throws CustomValidationException {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+        List<MessageParticipantEntity> participantEntities = messageParticipantRepository.findAllByUser_UserId(userId);
+        List<String> messageDates = participantEntities.stream()
+                .map(participant -> participant.getMessage().getMessageId())
+                .map(id -> messageRepository.findById(id).map(MessageEntity::getMeetingDateTime))
+                .flatMap(Optional::stream)
+                .map(dateTime -> dateTime.format(formatter)).distinct()
+                .toList();
+
+        return BaseResponseDTO.success(messageDates, "messageDates");
+    }
 }
 

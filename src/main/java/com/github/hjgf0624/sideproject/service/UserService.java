@@ -63,7 +63,12 @@ public class UserService {
             userEntity.setName(dto.getProfile().getName());
             userEntity.setNickname(dto.getProfile().getNickname());
             userEntity.setProfileImageUrl(profileImageUrl);
+            userEntity.setSex(dto.getProfile().getSex());
             userEntity.setPhoneNumber(dto.getProfile().getPhoneNumber());
+            userEntity.setBirthdate(dto.getProfile().getBirthdate());
+
+            userEntity.setLatitude(dto.getProfile().getLocation().getLatitude());
+            userEntity.setLongitude(dto.getProfile().getLocation().getLongitude());
         }
 
         return userEntity;
@@ -210,16 +215,16 @@ public class UserService {
         UserRegisterResponseDTO userDataDto = UserRegisterResponseDTO.builder()
                 .userId(savedUser.getUserId())
                 .firebaseToken(dto.getFcmToken())
-                .birthDate(savedUser.getBirthdate())
                 .profile(UserProfileDTO.builder()
                         .name(savedUser.getName())
                         .nickname(savedUser.getNickname())
                         .profileImageUrl(savedUser.getProfileImageUrl())
                         .phoneNumber(savedUser.getPhoneNumber())
-                        .build())
-                .location(LocationDTO.builder()
-                        .latitude(savedUser.getLatitude())
-                        .longitude(savedUser.getLongitude())
+                        .sex(savedUser.getSex())
+                        .birthdate(savedUser.getBirthdate())
+                        .location(LocationDTO.builder()
+                                        .longitude(savedUser.getLongitude())
+                                        .latitude(savedUser.getLatitude()).build())
                         .build())
                 .createdAt(savedUser.getCreatedAt())
                 .build();
@@ -306,5 +311,34 @@ public class UserService {
         );
         return BaseResponseDTO.success("FCM 토큰 저장 / 갱신 완료", "fcm_token")
                 .addField("message", "FCM 토큰 저장 성공");
+    }
+
+    @Transactional
+    public String deleteMemberShip(String accessToken, String userId) throws CustomValidationException {
+        Map<String, String> errors = new HashMap<>();
+        UserEntity userEntity = userRepository.findByUserId(userId);
+
+        if (userEntity == null){
+            errors.put("email", "사용자를 찾을 수 없습니다.");
+            throw new CustomValidationException(errors, "Validation fails");
+        }
+
+        refreshTokenRepository.deleteRefreshToken(userId);
+
+        Date expirationDate = jwtTokenProvider.getExpiration(accessToken);
+        long ttl = expirationDate.getTime() - System.currentTimeMillis();
+
+        if (ttl > 0) {
+            refreshTokenRepository.saveBlackList(accessToken, ttl);
+            userFcmTokenService.deleteToken(userId);
+        }
+
+        userEntity.getParticipants().clear();
+        userEntity.getRoles().clear();
+
+        System.out.println("삭제 시도: " + userId);
+        userRepository.deleteById(userId);
+
+        return "success";
     }
 }

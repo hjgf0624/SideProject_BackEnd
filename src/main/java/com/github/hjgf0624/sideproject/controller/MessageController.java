@@ -63,10 +63,23 @@ public class MessageController {
     @Operation(summary = "메세지 가져오기", description = "사용자 기준 주변에서 발급된 전체 메세지를 가져옵니다.")
     @PostMapping("/getMessages")
     public ResponseEntity<BaseResponseDTO<List<MessageGetResponseDTO>>> getMessages(@AuthenticationPrincipal CustomUser user) {
+        String userId = user.getUserId();
         Double longitude = user.getUser().getLongitude();
         Double latitude = user.getUser().getLatitude();
 
-        return ResponseEntity.ok(messageService.getMessages(longitude, latitude));
+        return ResponseEntity.ok(messageService.getMessages(userId, longitude, latitude));
+    }
+
+    @Operation(summary = "메세지 날짜 일괄 조회", description = "사용자 가입되어 있는 메세지 날짜를 일괄적으로 가져옵니다.")
+    @PostMapping("/getMessageDate")
+    public ResponseEntity<BaseResponseDTO<List<String>>> getMessageDate(@AuthenticationPrincipal CustomUser user) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        System.out.println(auth);
+        System.out.println(auth.getPrincipal());
+
+        String userId = user.getUserId();
+
+        return ResponseEntity.ok(messageService.getMessageDate(userId));
     }
 
 //    @Operation

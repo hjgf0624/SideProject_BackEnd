@@ -5,6 +5,8 @@ import com.github.hjgf0624.sideproject.dto.LocationDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
+import java.util.List;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -12,6 +14,10 @@ import lombok.*;
 @Builder
 @Schema(description = "메시지 응답 DTO")
 public class MessageGetResponseDTO {
+
+    @Schema(description = "메세지 ID")
+    @JsonProperty("message_id")
+    private Long id;
 
     @Schema(description = "약속 날짜 (YYYY-MM-DD 형식)")
     @JsonProperty("date")
@@ -36,6 +42,10 @@ public class MessageGetResponseDTO {
     @Schema(description = "위치 정보")
     @JsonProperty("location")
     private LocationDTO location;
+
+    @Schema(description = "참여자 정보")
+    @JsonProperty("participant")
+    private List<MessageParticipantDTO> memberList;
 
     @Getter
     @Setter

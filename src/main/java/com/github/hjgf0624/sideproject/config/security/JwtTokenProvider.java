@@ -120,7 +120,7 @@ public class JwtTokenProvider {
     }
 
     public boolean isBlacklisted(String accessToken) {
-        System.out.println(stringRedisTemplate.hasKey("blacklist:"+accessToken));
+        System.out.println(stringRedisTemplate.hasKey("blacklist: "+accessToken));
         return Boolean.TRUE.equals(stringRedisTemplate.hasKey("blacklist:" + accessToken));
     }
 }

@@ -21,8 +21,6 @@ public class UserFcmTokenService {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
 
-        System.out.println(user.toString());
-
         userFcmTokenRepository.findByUser(user).ifPresentOrElse(
                 existing -> existing.setFcmToken(fcmToken),
                 () -> userFcmTokenRepository.save(UserFcmTokenEntity.builder()
