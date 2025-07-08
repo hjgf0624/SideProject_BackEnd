@@ -30,30 +30,31 @@ public class MessageController {
     private final MessageService messageService;
     private final MessageBroadcastService messageBroadcastService;
 
+    @Operation(summary = "메시지 세부사항 조회", description = "메시지의 세부사항을 조회합니다.")
     @PostMapping("/msgDetail")
     public MsgDetailResponseDTO getMessageDetail(@RequestBody MsgDetailRequestDTO request) {
         return messageService.getMessageDetail(request);
     }
 
-    @Operation
+    @Operation(summary = "메시지 작성", description = "사용자가 메시지를 작성합니다.")
     @PostMapping("/sendMessages")
     public ResponseEntity<BaseResponseDTO<MessageResponseDTO>> saveMessage(@RequestBody MessageRequestDTO messageRequestDTO) {
         return ResponseEntity.ok(messageService.saveMessage(messageRequestDTO));
     }
 
-    @Operation
+    @Operation(summary = "광대역 푸시 메시지 전송", description = "주변 사용자에게 푸시 알림을 전송합니다")
     @PostMapping("/broadcasting")
     public ResponseEntity<Map<String, Object>> sendBroadcastMessage(@RequestBody MessageBroadcastRequestDTO request) {
         return ResponseEntity.ok(messageBroadcastService.broadcastMessage(request));
     }
 
-    @Operation
+    @Operation(summary = "참여", description = "사용자가 메시지에 참여합니다.")
     @PostMapping("/join")
     public ResponseEntity<Map<String, Boolean>> join(@RequestBody JoinMessageDTO dto) {
         return messageService.joinMessage(dto);
     }
 
-    @Operation
+    @Operation(summary = "날짜로 메세지 조회", description = "날짜로 사용자가 참여한 메세지를 조회합니다.")
     @PostMapping("/getMessagesByDate")
     public ResponseEntity<BaseResponseDTO<List<MessageGetResponseDTO>>> getMessagesByDate(@RequestBody MessageGetRequestDTO dto) {
         return ResponseEntity.ok(messageService.getMessagesByDate(dto));

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -41,6 +42,12 @@ public class MessageBroadcastService {
         // 10km 내 사용자 조회
         List<UserEntity> nearbyUsers = userRepository.findNearbyUsers(latitude, longitude);
 
+        // FCM 토큰 수집
+        List<String> fcmTokens = nearbyUsers.stream()
+                .map(userFcmTokenRepository::findByUser)
+                .filter(Optional::isPresent)
+                .map(optional -> optional.get().getFcmToken())
+                .toList();
         // 토큰을 이용해 메시지 전송
         for (UserEntity user : nearbyUsers) {
             userFcmTokenRepository.findByUser(user).ifPresent(userFcmToken -> {
@@ -48,7 +55,7 @@ public class MessageBroadcastService {
                     fcmService.sendBroadcastMessage(
                             message.getTitle(),
                             message.getContent(),
-                            userFcmToken.getFcmToken()
+                            fcmTokens
                     );
                 } catch (Exception e) {
                     // 예외 처리 (FCM 전송 실패시 등, printStackTrace 대신 다른 Logger 사용해야 할 듯)

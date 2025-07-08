@@ -6,11 +6,13 @@ import com.github.hjgf0624.sideproject.dto.user.UserLoginDTO;
 import com.github.hjgf0624.sideproject.dto.user.UserLoginResponseDTO;
 import com.github.hjgf0624.sideproject.dto.user.UserRegisterDTO;
 import com.github.hjgf0624.sideproject.dto.user.UserRegisterResponseDTO;
+import com.github.hjgf0624.sideproject.service.AuthService;
 import com.github.hjgf0624.sideproject.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import com.github.hjgf0624.sideproject.dto.BaseResponseDTO;
 import com.github.hjgf0624.sideproject.dto.user.*;
+import okhttp3.Response;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,6 +38,7 @@ public class AuthController {
     private final JwtTokenProvider jwtTokenProvider;
     private final EmailAuthService emailAuthService;
     private final SmsAuthService smsAuthService;
+    private final AuthService authService;
 
     @Operation(summary = "회원가입", description = "회원가입을 진행합니다.")
     @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -89,23 +92,31 @@ public class AuthController {
     public ResponseEntity<String> logout(@RequestBody UserLogoutDTO dto) {
         return ResponseEntity.ok(userService.logout(dto));
     }
-  
+
+    @Operation(summary = "이메일 인증", description = "현재 사용자의 이메일 인증을 진행합니다.")
     @PostMapping("/emailAuth")
     public ResponseEntity<Map<String, String>> emailAuth(@RequestBody EmailAuthRequest request) {
         String code = emailAuthService.sendEmailAuthCode(request.getEmail());
         return ResponseEntity.ok(Collections.singletonMap("code", code)); // 프론트에서 관리
     }
 
+    @Operation(summary = "휴대폰 인증", description = "현재 사용자의 휴대폰 인증을 진행합니다.")
     @PostMapping("/phoneAuth")
     public ResponseEntity<Map<String, String>> phoneAuth(@RequestBody PhoneAuthRequest request) {
         String code = smsAuthService.sendSmsAuthCode(request.getPhone());
         return ResponseEntity.ok(Collections.singletonMap("code", code)); // 프론트에서 관리
     }
 
-    @Operation(summary = "FCM 토큰 저장 / 갱신")
+    @Operation(summary = "FCM 토큰 저장 / 갱신", description = "현재 사용자의 FCM 토큰을 저장 또는 갱신합니다.")
     @PostMapping("/fcmTokenSaveOrRefresh")
     public ResponseEntity<BaseResponseDTO<String>> saveOrUpdateFcmToken(@RequestBody FcmTokenRequestDTO fcmTokenRequestDTO) {
         return ResponseEntity.ok(userService.saveOrUpdateFcmToken(fcmTokenRequestDTO.getUserId(), fcmTokenRequestDTO.getFcmToken()));
+    }
+
+    @Operation(summary = "아이디 찾기", description = "사용자의 이름과 전화번호로 ID를 조회합니다.")
+    @PostMapping("/findId")
+    public ResponseEntity<BaseResponseDTO<UserFindIdResponseDTO>> findId(@RequestBody UserFindIdRequestDTO request){
+        return ResponseEntity.ok(authService.findUserId(request));
     }
 
 }

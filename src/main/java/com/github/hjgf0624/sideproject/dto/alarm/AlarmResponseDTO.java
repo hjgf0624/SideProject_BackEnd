@@ -1,5 +1,6 @@
 package com.github.hjgf0624.sideproject.dto.alarm;
 import com.github.hjgf0624.sideproject.entity.MessageEntity;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -7,10 +8,18 @@ import java.util.Set;
 
 @Getter
 @AllArgsConstructor
+@Schema(description = "알람 Response DTO")
 public class AlarmResponseDTO {
+    @Schema(description = "메시지 ID")
     private Long messageId;
+
+    @Schema(description = "메시지 제목")
     private String title;
+
+    @Schema(description = "카테고리")
     private Integer category;
+
+    @Schema(description = "생성날짜")
     private String createdAt;
 //    private String profileImg;
 
