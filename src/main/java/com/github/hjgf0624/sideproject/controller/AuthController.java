@@ -121,6 +121,18 @@ public class AuthController {
         return ResponseEntity.ok(authService.findUserId(request));
     }
 
+    @Operation(summary = "비밀번호 재설정 요청", description = "사용자의 이메일로 인증코드를 전송합니다.")
+    @PostMapping("/requestPasswordReset")
+    public ResponseEntity<BaseResponseDTO<Void>> requestPasswordReset(@RequestBody UserPwdResetRequestDTO request){
+        return ResponseEntity.ok(authService.sendResetCode(request));
+    }
+
+    @Operation(summary = "비밀번호 재설정", description = "인증코드를 통해 비밀번호를 재설정합니다.")
+    @PostMapping("/resetPassword")
+    public ResponseEntity<BaseResponseDTO<Void>> resetPassword(@RequestBody UserPwdResetDTO request){
+        return ResponseEntity.ok(authService.resetPwd(request));
+    }
+
     @Operation(summary = "회원탈퇴")
     @PostMapping("/deleteMembership")
     public ResponseEntity<String> deleteMembership(@RequestHeader("Authorization") String token,

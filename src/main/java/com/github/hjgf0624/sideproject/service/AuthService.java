@@ -10,6 +10,7 @@ import com.github.hjgf0624.sideproject.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.ThreadLocalRandom;
@@ -21,6 +22,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final JavaMailSender javaMailSender;
+    private final PasswordEncoder passwordEncoder;
 
     public BaseResponseDTO<UserFindIdResponseDTO> findUserId(UserFindIdRequestDTO request) {
         UserEntity user = userRepository.findByNameAndPhoneNumber(request.getName(), request.getPhoneNum())
@@ -45,7 +47,9 @@ public class AuthService {
             throw new RuntimeException("일치하는 사용자가 없습니다.");
         }
 
-//        String hassPwd = passwordEn
+        String hashedPwd = passwordEncoder.encode(request.getNewPwd());
+        user.setUserPw(hashedPwd);
+        userRepository.save(user);
         return BaseResponseDTO.success(null, "비밀번호가 성공적으로 변경되었습니다.");
     }
 
