@@ -46,4 +46,30 @@ out
 gen
 build
 
-application.properties
+# ✅ macOS 관련 불필요 파일
+.DS_Store
+
+# ✅ Firebase 관련 민감 파일
+google-services.json
+**/google-services.json
+sideproject-*-firebase-adminsdk-*.json
+**/*firebase-adminsdk*.json
+
+# ✅ IDE 설정
+.idea/
+*.iml
+
+# ✅ SSH 접속 정보/로그 파일 (예: `ubuntu@ec2-...`)
+*.log
+*.pem
+*.ssh
+*ec2-*.ap-northeast-2.compute.amazonaws.com*
+
+# ✅ 기타
+.env
+
+# 만약 yml만 쓸 거면
+*.properties
+
+# 반대로 properties만 쓸 거면
+*.yml

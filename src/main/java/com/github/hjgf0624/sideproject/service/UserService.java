@@ -252,6 +252,8 @@ public class UserService {
                 .nickname(userEntity.getNickname())
                 .profileImageUrl(userEntity.getProfileImageUrl())
                 .phoneNumber(userEntity.getPhoneNumber())
+                .birthdate(userEntity.getBirthdate())
+                .sex(userEntity.getSex())
                 .location(LocationDTO.builder()
                         .latitude(userEntity.getLatitude())
                         .longitude(userEntity.getLongitude())
