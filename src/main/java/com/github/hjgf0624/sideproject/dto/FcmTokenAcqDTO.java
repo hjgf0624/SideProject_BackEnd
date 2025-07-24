@@ -10,7 +10,8 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 
-public class FcmTokenRequestDTO {
+public class FcmTokenAcqDTO {
+
     private String userId;
     private String fcmToken;
 }

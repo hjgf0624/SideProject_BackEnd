@@ -13,7 +13,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import com.github.hjgf0624.sideproject.dto.BaseResponseDTO;
 import com.github.hjgf0624.sideproject.dto.user.*;
-import okhttp3.Response;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -97,40 +96,46 @@ public class AuthController {
 
     @Operation(summary = "이메일 인증", description = "현재 사용자의 이메일 인증을 진행합니다.")
     @PostMapping("/emailAuth")
-    public ResponseEntity<Map<String, String>> emailAuth(@RequestBody EmailAuthRequest request) {
+    public ResponseEntity<Map<String, String>> emailAuth(@RequestBody EmailAuthDTO request) {
         String code = emailAuthService.sendEmailAuthCode(request.getEmail());
         return ResponseEntity.ok(Collections.singletonMap("code", code)); // 프론트에서 관리
     }
 
     @Operation(summary = "휴대폰 인증", description = "현재 사용자의 휴대폰 인증을 진행합니다.")
     @PostMapping("/phoneAuth")
-    public ResponseEntity<Map<String, String>> phoneAuth(@RequestBody PhoneAuthRequest request) {
+    public ResponseEntity<Map<String, String>> phoneAuth(@RequestBody PhoneAuthDTO request) {
         String code = smsAuthService.sendSmsAuthCode(request.getPhone());
         return ResponseEntity.ok(Collections.singletonMap("code", code)); // 프론트에서 관리
     }
 
     @Operation(summary = "FCM 토큰 저장 / 갱신", description = "현재 사용자의 FCM 토큰을 저장 또는 갱신합니다.")
     @PostMapping("/fcmTokenSaveOrRefresh")
-    public ResponseEntity<BaseResponseDTO<String>> saveOrUpdateFcmToken(@RequestBody FcmTokenRequestDTO fcmTokenRequestDTO) {
+    public ResponseEntity<BaseResponseDTO<String>> saveOrUpdateFcmToken(@RequestBody FcmTokenAcqDTO fcmTokenRequestDTO) {
         return ResponseEntity.ok(userService.saveOrUpdateFcmToken(fcmTokenRequestDTO.getUserId(), fcmTokenRequestDTO.getFcmToken()));
     }
 
     @Operation(summary = "아이디 찾기", description = "사용자의 이름과 전화번호로 ID를 조회합니다.")
     @PostMapping("/findId")
-    public ResponseEntity<BaseResponseDTO<UserFindIdResponseDTO>> findId(@RequestBody UserFindIdRequestDTO request){
+    public ResponseEntity<BaseResponseDTO<UserFindIdResponseDTO>> findId(@RequestBody UserFindIdDTO request){
         return ResponseEntity.ok(authService.findUserId(request));
     }
 
-    @Operation(summary = "비밀번호 재설정 요청", description = "사용자의 이메일로 인증코드를 전송합니다.")
-    @PostMapping("/requestPasswordReset")
-    public ResponseEntity<BaseResponseDTO<Void>> requestPasswordReset(@RequestBody UserPwdResetRequestDTO request){
-        return ResponseEntity.ok(authService.sendResetCode(request));
-    }
-
-    @Operation(summary = "비밀번호 재설정", description = "인증코드를 통해 비밀번호를 재설정합니다.")
+    @Operation(summary = "비밀번호 재설정", description = "비밀번호를 재설정합니다.")
     @PostMapping("/resetPassword")
     public ResponseEntity<BaseResponseDTO<Void>> resetPassword(@RequestBody UserPwdResetDTO request){
         return ResponseEntity.ok(authService.resetPwd(request));
+    }
+
+    @Operation(summary = "이메일 인증번호 전송", description = "이메일 인증번호를 전송합니다.")
+    @PostMapping("/sendEmailAuthCode")
+    public ResponseEntity<BaseResponseDTO<Void>> sendEmailAuthCode(@RequestBody EmailAuthDTO request){
+        return ResponseEntity.ok(authService.sendAuthCodeToEmail(request));
+    }
+
+    @Operation(summary = "휴대폰 인증번호 전송", description = "휴대폰 인증번호를 전송합니다.")
+    @PostMapping("/sendPhoneAuthCode")
+    public ResponseEntity<BaseResponseDTO<Void>> sendPhoneAuthCode(@RequestBody PhoneAuthDTO request){
+        return ResponseEntity.ok(authService.sendAuthCodeToPhone(request));
     }
 
     @Operation(summary = "회원탈퇴")

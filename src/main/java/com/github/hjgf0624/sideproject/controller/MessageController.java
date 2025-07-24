@@ -82,10 +82,5 @@ public class MessageController {
         return ResponseEntity.ok(messageService.getMessageDate(userId));
     }
 
-//    @Operation
-//    @PostMapping("/getMe")
-//    public String getMe(@AuthenticationPrincipal CustomUser user) {
-//        return user.getUsername();
-//    }
 }
 
