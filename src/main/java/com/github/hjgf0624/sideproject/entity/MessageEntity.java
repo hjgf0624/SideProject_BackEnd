@@ -21,9 +21,6 @@ public class MessageEntity {
     @Column(name = "message_id")
     private Long messageId;
 
-    @Column(name = "category_id")
-    private Integer categoryId;
-
     @Column(name = "user_id", length = 60, nullable = false)
     private String userId;
 
@@ -59,5 +56,8 @@ public class MessageEntity {
 
     @OneToMany(mappedBy = "message", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<MessageParticipantEntity> participants;
+
+    @OneToMany(mappedBy = "message", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private List<MessageCategoryEntity> category;
 }
 

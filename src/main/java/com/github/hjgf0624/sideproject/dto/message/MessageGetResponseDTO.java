@@ -1,6 +1,7 @@
 package com.github.hjgf0624.sideproject.dto.message;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.hjgf0624.sideproject.dto.CategorySimpleDTO;
 import com.github.hjgf0624.sideproject.dto.LocationDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
@@ -42,6 +43,10 @@ public class MessageGetResponseDTO {
     @Schema(description = "위치 정보")
     @JsonProperty("location")
     private LocationDTO location;
+
+    @Schema(description = "메세지 카테고리")
+    @JsonProperty("category")
+    private List<CategorySimpleDTO> category;
 
     @Schema(description = "참여자 정보")
     @JsonProperty("participant")

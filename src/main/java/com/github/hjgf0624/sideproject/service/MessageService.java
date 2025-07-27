@@ -1,6 +1,6 @@
 package com.github.hjgf0624.sideproject.service;
 
-import com.github.hjgf0624.sideproject.dto.UserDTO;
+import com.github.hjgf0624.sideproject.dto.CategorySimpleDTO;
 import com.github.hjgf0624.sideproject.dto.msg.MsgDetailRequestDTO;
 import com.github.hjgf0624.sideproject.dto.msg.MsgDetailResponseDTO;
 import com.github.hjgf0624.sideproject.dto.user.UserProfileDTO;
@@ -18,7 +18,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -61,6 +60,12 @@ public class MessageService {
                         .time(msg.getMeetingDateTime().format(DateTimeFormatter.ofPattern("HH:mm")))
                         .title(msg.getTitle())
                         .contents(msg.getContent())
+                        .category(msg.getCategory().stream()
+                                .map(mc -> {
+                                    CategoryEntity category = mc.getCategory();
+                                    return new CategorySimpleDTO(category.getCategoryId(), category.getCategoryName());
+                                })
+                                .collect(Collectors.toList()))
                         .memberList(msg.getParticipants().stream()
                                 .map(participant -> new MessageParticipantDTO(
                                         participant.getParticipantType(),
@@ -103,6 +108,12 @@ public class MessageService {
                 .createdAt(message.getCreatedAt())
                 .capacityMemberNum(message.getRecruitCount())
                 .currentMemberNum(messageParticipantRepository.countByMessage_MessageId(message.getMessageId()))
+                .category(message.getCategory().stream()
+                        .map(mc -> new CategorySimpleDTO(
+                                mc.getCategory().getCategoryId(),
+                                mc.getCategory().getCategoryName()
+                        ))
+                        .collect(Collectors.toList()))
                 .memberList(message.getParticipants().stream()
                         .map(participant -> new MessageParticipantDTO(
                                 participant.getParticipantType(),
@@ -170,6 +181,12 @@ public class MessageService {
                         .title(msg.getTitle())
                         .contents(msg.getContent())
                         .location(LocationDTO.builder().longitude(msg.getLongitude()).latitude(msg.getLatitude()).build())
+                        .category(msg.getCategory().stream()
+                                .map(mc -> new CategorySimpleDTO(
+                                        mc.getCategory().getCategoryId(),
+                                        mc.getCategory().getCategoryName()
+                                ))
+                                .collect(Collectors.toList()))
                         .recruitCount(MessageGetResponseDTO.RecruitCount.builder()
                                 .current(messageParticipantRepository.countByMessage_MessageId(msg.getMessageId()))
                                 .max(msg.getRecruitCount())

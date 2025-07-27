@@ -1,9 +1,11 @@
 package com.github.hjgf0624.sideproject.controller;
 
 import com.github.hjgf0624.sideproject.config.security.domain.CustomUser;
+import com.github.hjgf0624.sideproject.dto.CategorySimpleDTO;
 import com.github.hjgf0624.sideproject.dto.msg.MsgDetailRequestDTO;
 import com.github.hjgf0624.sideproject.dto.msg.MsgDetailResponseDTO;
 import com.github.hjgf0624.sideproject.entity.MessageEntity;
+import com.github.hjgf0624.sideproject.service.CategoryService;
 import com.github.hjgf0624.sideproject.service.MessageBroadcastService;
 import com.github.hjgf0624.sideproject.service.MessageService;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +31,7 @@ public class MessageController {
 
     private final MessageService messageService;
     private final MessageBroadcastService messageBroadcastService;
+    private final CategoryService categoryService;
 
     @Operation(summary = "메시지 세부사항 조회", description = "메시지의 세부사항을 조회합니다.")
     @PostMapping("/msgDetail")
@@ -74,12 +77,26 @@ public class MessageController {
     @PostMapping("/getMessageDate")
     public ResponseEntity<BaseResponseDTO<List<String>>> getMessageDate(@AuthenticationPrincipal CustomUser user) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        System.out.println(auth);
-        System.out.println(auth.getPrincipal());
 
         String userId = user.getUserId();
 
         return ResponseEntity.ok(messageService.getMessageDate(userId));
+    }
+
+    @Operation(summary = "카테고리 일괄 조회", description = "서버에 저장된 카테고리를 가져옵니다.")
+    @PostMapping("/getCategories")
+    public ResponseEntity<BaseResponseDTO<List<CategorySimpleDTO>>> getCategories(@AuthenticationPrincipal CustomUser user) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        return ResponseEntity.ok(categoryService.getCategories());
+    }
+
+    @Operation(summary = "카테고리 조회(이름)", description = "카테고리 이름을 통해 서버에 저장된 카테고리를 가져옵니다.")
+    @PostMapping("/getCategoryByCategoryName")
+    public ResponseEntity<BaseResponseDTO<CategorySimpleDTO>> getCategoryByCategoryName(@AuthenticationPrincipal CustomUser user, @RequestBody String categoryName) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        return ResponseEntity.ok(categoryService.getCategoryByCategoryName(categoryName));
     }
 
 //    @Operation
