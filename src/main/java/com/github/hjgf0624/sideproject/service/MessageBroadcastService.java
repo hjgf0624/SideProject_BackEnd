@@ -40,7 +40,7 @@ public class MessageBroadcastService {
                 .orElseThrow(() -> new RuntimeException("메시지를 찾을 수 없습니다."));
 
         // 10km 내 사용자 조회
-        List<UserEntity> nearbyUsers = userRepository.findNearbyUsers(latitude, longitude);
+        List<UserEntity> nearbyUsers = userRepository.findNearbyUsers(longitude, latitude);
 
         // FCM 토큰 수집
         List<String> fcmTokens = nearbyUsers.stream()
