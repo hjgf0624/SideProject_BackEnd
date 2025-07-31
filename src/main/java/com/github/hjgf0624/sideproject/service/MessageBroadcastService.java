@@ -31,16 +31,19 @@ public class MessageBroadcastService {
     // 메시지 브로드캐스트 처리
     @Transactional
     public Map<String, Object> broadcastMessage(MessageBroadcastRequestDTO request) {
-        Long messageId = request.getMessageId();
-        double latitude = request.getLatitude();
-        double longitude = request.getLongitude();
-
         // 메시지 가져오기
-        MessageEntity message = messageRepository.findById(messageId)
+        MessageEntity message = messageRepository.findById(request.getMessageId())
                 .orElseThrow(() -> new RuntimeException("메시지를 찾을 수 없습니다."));
+
+        double longitude = message.getLongitude();
+        double latitude = message.getLatitude();
+
+        System.out.println("쿼리용 위도: " + latitude + ", 경도: " + longitude);
 
         // 10km 내 사용자 조회
         List<UserEntity> nearbyUsers = userRepository.findNearbyUsers(longitude, latitude);
+
+        System.out.println(nearbyUsers);
 
         // FCM 토큰 수집
         List<String> fcmTokens = nearbyUsers.stream()

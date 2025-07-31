@@ -5,6 +5,4 @@ import lombok.Data;
 @Data
 public class MessageBroadcastRequestDTO {
     private Long messageId;
-    private double latitude;
-    private double longitude;
 }
