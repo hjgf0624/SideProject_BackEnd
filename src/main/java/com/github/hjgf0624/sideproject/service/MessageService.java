@@ -5,22 +5,18 @@ import com.github.hjgf0624.sideproject.dto.msg.MsgDetailRequestDTO;
 import com.github.hjgf0624.sideproject.dto.msg.MsgDetailResponseDTO;
 import com.github.hjgf0624.sideproject.dto.user.UserProfileDTO;
 import com.github.hjgf0624.sideproject.entity.*;
-import com.github.hjgf0624.sideproject.repository.MessageRepository;
+import com.github.hjgf0624.sideproject.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import com.github.hjgf0624.sideproject.dto.BaseResponseDTO;
 import com.github.hjgf0624.sideproject.dto.LocationDTO;
 import com.github.hjgf0624.sideproject.dto.message.*;
 import com.github.hjgf0624.sideproject.exception.CustomValidationException;
-import com.github.hjgf0624.sideproject.repository.MessageParticipantRepository;
-import com.github.hjgf0624.sideproject.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,6 +26,8 @@ public class MessageService {
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
     private final MessageParticipantRepository messageParticipantRepository;
+    private final CategoryRepository categoryRepository;
+    private final MessageCategoryRepository messageCategoryRepository;
 
     public MessageEntity toEntity(MessageRequestDTO messageRequestDTO) {
         MessageEntity messageEntity = new MessageEntity();
@@ -108,7 +106,9 @@ public class MessageService {
                 .createdAt(message.getCreatedAt())
                 .capacityMemberNum(message.getRecruitCount())
                 .currentMemberNum(messageParticipantRepository.countByMessage_MessageId(message.getMessageId()))
-                .category(message.getCategory().stream()
+                .category(Optional.ofNullable(message.getCategory())
+                        .orElse(Collections.emptyList())
+                        .stream()
                         .map(mc -> new CategorySimpleDTO(
                                 mc.getCategory().getCategoryId(),
                                 mc.getCategory().getCategoryName()
@@ -131,9 +131,20 @@ public class MessageService {
     }
 
     @Transactional
-    public BaseResponseDTO<MessageResponseDTO> saveMessage(MessageRequestDTO dto) {
+    public BaseResponseDTO<Long> saveMessage(MessageRequestDTO dto) {
         MessageEntity message = toEntity(dto);
         MessageEntity savedMessage = messageRepository.save(message);
+
+        for (Long categoryId:dto.getCategories()) {
+            CategoryEntity category = categoryRepository.findById(categoryId).orElse(null);
+
+            MessageCategoryEntity msgCategory = new MessageCategoryEntity();
+            msgCategory.setId(new MessageCategoryId(savedMessage.getMessageId(), categoryId));
+            msgCategory.setMessage(savedMessage);
+            msgCategory.setCategory(category);
+
+            messageCategoryRepository.save(msgCategory);
+        }
 
         MessageParticipantId participantId = new MessageParticipantId(savedMessage.getUserId(), savedMessage.getMessageId());
         MessageParticipantEntity participant = MessageParticipantEntity.builder()
@@ -145,29 +156,13 @@ public class MessageService {
 
         messageParticipantRepository.save(participant);
 
-        MessageResponseDTO responseDTO = MessageResponseDTO.builder()
-                .messageId(savedMessage.getMessageId())
-                .userId(savedMessage.getUserId())
-                .title(savedMessage.getTitle())
-                .content(savedMessage.getContent())
-                .anonymous(savedMessage.isAnonymous())
-                .meetingDateTime(savedMessage.getMeetingDateTime())
-                .recruitCount(savedMessage.getRecruitCount())
-//                .categories()
-                .location(LocationDTO.builder()
-                        .latitude(savedMessage.getLatitude())
-                        .longitude(savedMessage.getLongitude())
-                        .build())
-                .createdAt(savedMessage.getCreatedAt())
-                .build();
-
-        return BaseResponseDTO.success(responseDTO, "data")
+        return BaseResponseDTO.success(savedMessage.getMessageId(), "message_id")
                 .addField("message", "메시지 생성 성공")
                 .addField("isExist", false);
     }
 
-    public BaseResponseDTO<List<MessageGetResponseDTO>> getMessagesByDate(MessageGetRequestDTO dto) throws CustomValidationException {
-        List<MessageEntity> messages = messageRepository.findUserMessagesByDate(dto.getUserId(), dto.getDate());
+    public BaseResponseDTO<List<MessageGetResponseDTO>> getMessagesByDate(String userId, MessageGetRequestDTO dto) throws CustomValidationException {
+        List<MessageEntity> messages = messageRepository.findUserMessagesByDate(userId, dto.getDate());
 
         if (messages.isEmpty()) {
             return null;

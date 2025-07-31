@@ -48,10 +48,10 @@ public class MessageRequestDTO {
     @Min(value = 1, message = "recruit_count는 최소 1 이상이어야 합니다.")
     private int recruitCount;
 
-    @Schema(description = "선택된 카테고리 리스트", example = "[\"#게임\", \"#스터디\"]")
+    @Schema(description = "선택된 카테고리 리스트", example = "[ 1, 2 ]")
     @JsonProperty("categories")
     @NotEmpty(message = "categories는 최소 하나 이상 선택해야 합니다.")
-    private List<String> categories;
+    private List<Long> categories;
 
     @Schema(description = "위치 정보")
     @JsonProperty("location")

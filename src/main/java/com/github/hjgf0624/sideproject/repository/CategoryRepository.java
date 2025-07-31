@@ -4,6 +4,6 @@ import com.github.hjgf0624.sideproject.entity.CategoryEntity;
 import com.github.hjgf0624.sideproject.entity.MessageCategoryId;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface CategoryRepository extends JpaRepository<CategoryEntity, MessageCategoryId> {
+public interface CategoryRepository extends JpaRepository<CategoryEntity, Long> {
     CategoryEntity findByCategoryName(String name);
 }

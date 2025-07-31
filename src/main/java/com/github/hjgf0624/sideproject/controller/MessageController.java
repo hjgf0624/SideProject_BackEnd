@@ -41,7 +41,7 @@ public class MessageController {
 
     @Operation(summary = "메시지 작성", description = "사용자가 메시지를 작성합니다.")
     @PostMapping("/sendMessages")
-    public ResponseEntity<BaseResponseDTO<MessageResponseDTO>> saveMessage(@RequestBody MessageRequestDTO messageRequestDTO) {
+    public ResponseEntity<BaseResponseDTO<Long>> saveMessage(@RequestBody MessageRequestDTO messageRequestDTO) {
         return ResponseEntity.ok(messageService.saveMessage(messageRequestDTO));
     }
 
@@ -59,8 +59,9 @@ public class MessageController {
 
     @Operation(summary = "날짜로 메세지 조회", description = "날짜로 사용자가 참여한 메세지를 조회합니다.")
     @PostMapping("/getMessagesByDate")
-    public ResponseEntity<BaseResponseDTO<List<MessageGetResponseDTO>>> getMessagesByDate(@RequestBody MessageGetRequestDTO dto) {
-        return ResponseEntity.ok(messageService.getMessagesByDate(dto));
+    public ResponseEntity<BaseResponseDTO<List<MessageGetResponseDTO>>> getMessagesByDate(@AuthenticationPrincipal CustomUser user, @RequestBody MessageGetRequestDTO dto) {
+        String userId = user.getUserId();
+        return ResponseEntity.ok(messageService.getMessagesByDate(userId, dto));
     }
 
     @Operation(summary = "메세지 가져오기", description = "사용자 기준 주변에서 발급된 전체 메세지를 가져옵니다.")
@@ -76,8 +77,6 @@ public class MessageController {
     @Operation(summary = "메세지 날짜 일괄 조회", description = "사용자 가입되어 있는 메세지 날짜를 일괄적으로 가져옵니다.")
     @PostMapping("/getMessageDate")
     public ResponseEntity<BaseResponseDTO<List<String>>> getMessageDate(@AuthenticationPrincipal CustomUser user) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
         String userId = user.getUserId();
 
         return ResponseEntity.ok(messageService.getMessageDate(userId));
@@ -86,16 +85,12 @@ public class MessageController {
     @Operation(summary = "카테고리 일괄 조회", description = "서버에 저장된 카테고리를 가져옵니다.")
     @PostMapping("/getCategories")
     public ResponseEntity<BaseResponseDTO<List<CategorySimpleDTO>>> getCategories(@AuthenticationPrincipal CustomUser user) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
         return ResponseEntity.ok(categoryService.getCategories());
     }
 
     @Operation(summary = "카테고리 조회(이름)", description = "카테고리 이름을 통해 서버에 저장된 카테고리를 가져옵니다.")
     @PostMapping("/getCategoryByCategoryName")
     public ResponseEntity<BaseResponseDTO<CategorySimpleDTO>> getCategoryByCategoryName(@AuthenticationPrincipal CustomUser user, @RequestBody String categoryName) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
         return ResponseEntity.ok(categoryService.getCategoryByCategoryName(categoryName));
     }
 
