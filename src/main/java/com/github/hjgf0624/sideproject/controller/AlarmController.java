@@ -1,5 +1,6 @@
 package com.github.hjgf0624.sideproject.controller;
 
+import com.github.hjgf0624.sideproject.config.security.domain.CustomUser;
 import com.github.hjgf0624.sideproject.dto.alarm.AlarmRequestDTO;
 import com.github.hjgf0624.sideproject.dto.alarm.AlarmResponseDTO;
 import com.github.hjgf0624.sideproject.service.AlarmService;
@@ -10,6 +11,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,8 +27,10 @@ public class AlarmController {
             @ApiResponse(responseCode = "200", description = "알람 리스트 반환",
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = AlarmResponseDTO.class))))
     })
-    public ResponseEntity<List<AlarmResponseDTO>> getAlarmList(@RequestBody AlarmRequestDTO request) {
-        List<AlarmResponseDTO> alarms = alarmService.getAlarmList(request.getUserId(), request.getLocation());
+    public ResponseEntity<List<AlarmResponseDTO>> getAlarmList(@AuthenticationPrincipal CustomUser user) {
+        String userId = user.getUserId();
+
+        List<AlarmResponseDTO> alarms = alarmService.getAlarmList(userId);
         return ResponseEntity.ok(alarms);
     }
 }

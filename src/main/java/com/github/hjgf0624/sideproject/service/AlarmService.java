@@ -1,9 +1,14 @@
 package com.github.hjgf0624.sideproject.service;
 
+import com.github.hjgf0624.sideproject.dto.CategorySimpleDTO;
 import com.github.hjgf0624.sideproject.dto.LocationDTO;
 import com.github.hjgf0624.sideproject.dto.alarm.AlarmResponseDTO;
+import com.github.hjgf0624.sideproject.entity.MessageCategoryEntity;
 import com.github.hjgf0624.sideproject.entity.MessageEntity;
+import com.github.hjgf0624.sideproject.entity.ParticipantTypeEntity;
+import com.github.hjgf0624.sideproject.entity.UserEntity;
 import com.github.hjgf0624.sideproject.repository.MessageRepository;
+import com.github.hjgf0624.sideproject.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,11 +19,14 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AlarmService {
     private final MessageRepository messageRepository;
+    private final UserRepository userRepository;
 
     // 특정 사용자의 알람 리스트 조회 (위치 기반)
-    public List<AlarmResponseDTO> getAlarmList(String userId, LocationDTO location) {
-        double longitude = location.getLongitude();
-        double latitude = location.getLatitude();
+    public List<AlarmResponseDTO> getAlarmList(String userId) {
+        UserEntity user = userRepository.findByUserId(userId);
+
+        double longitude = user.getLongitude();
+        double latitude = user.getLatitude();
 
         // 게시글 반경 10km 이내의 유저를 구하는 로직!
 //        double minLat = savedMessage.getLatitude() - 0.09;
@@ -33,7 +41,19 @@ public class AlarmService {
 
         // 메시지 데이터를 알람 형태로 변환
         return messages.stream()
-                .map(AlarmResponseDTO::fromEntity)
+                .map(msg -> new AlarmResponseDTO(
+                        msg.getMessageId(),
+                        msg.getTitle(),
+                        msg.getCategory().stream()
+                                .map(mc -> new CategorySimpleDTO(mc.getCategory().getCategoryId(), mc.getCategory().getCategoryName()))
+                                .collect(Collectors.toList()),
+                        msg.getCreatedAt(),
+                        msg.getParticipants().stream()
+                                .filter(p -> p.getParticipantType() == ParticipantTypeEntity.PUBLISHER)
+                                .map(p -> p.getUser().getProfileImageUrl())
+                                .findFirst()
+                                .orElse(null)
+                ))
                 .collect(Collectors.toList());
     }
 }

@@ -20,7 +20,5 @@ public class AlarmServiceTest {
         dto.setLatitude(37.123);
         dto.setLongitude(-122.456);
 
-        System.out.println(alarmService.getAlarmList("test@example.com", dto));
-
     }
 }
