@@ -11,7 +11,5 @@ import lombok.Setter;
 @AllArgsConstructor
 
 public class FcmTokenAcqDTO {
-
-    private String userId;
     private String fcmToken;
 }

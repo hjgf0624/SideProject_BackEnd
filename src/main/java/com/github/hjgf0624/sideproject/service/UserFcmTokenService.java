@@ -2,6 +2,8 @@ package com.github.hjgf0624.sideproject.service;
 
 import com.github.hjgf0624.sideproject.entity.UserEntity;
 import com.github.hjgf0624.sideproject.entity.UserFcmTokenEntity;
+import com.github.hjgf0624.sideproject.exception.CustomException;
+import com.github.hjgf0624.sideproject.exception.ErrorCode;
 import com.github.hjgf0624.sideproject.repository.UserFcmTokenRepository;
 import com.github.hjgf0624.sideproject.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +21,7 @@ public class UserFcmTokenService {
     @Transactional
     public void saveOrUpdateToken(String userId, String fcmToken) {
         UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.AUTH_005));
 
         userFcmTokenRepository.findByUser(user).ifPresentOrElse(
                 existing -> existing.setFcmToken(fcmToken),
@@ -33,12 +35,12 @@ public class UserFcmTokenService {
     @Transactional
     public void deleteToken(String userId) {
         UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.AUTH_005));
 
         userFcmTokenRepository.findByUser(user).ifPresentOrElse(
                 existing -> userFcmTokenRepository.deleteById(existing.getId()),
                 () -> {
-                    throw new RuntimeException("해당 유저의 FCM 토큰이 존재하지 않습니다.");
+                    throw new CustomException(ErrorCode.FCM_NO_TOKENS);
                 }
         );
     }

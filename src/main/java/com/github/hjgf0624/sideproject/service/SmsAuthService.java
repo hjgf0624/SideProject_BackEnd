@@ -1,5 +1,7 @@
 package com.github.hjgf0624.sideproject.service;
 
+import com.github.hjgf0624.sideproject.exception.CustomException;
+import com.github.hjgf0624.sideproject.exception.ErrorCode;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -63,10 +65,10 @@ public class SmsAuthService {
             SingleMessageSentResponse response = this.messageService.sendOne(new SingleMessageSendingRequest(message));
             log.info("SMS Send Response: {}", response);
 
-            return code; // 프론트에서 인증번호 관리
+            return code; // 인증번호 반환
         } catch (Exception e) {
             log.error("SMS 전송 중 오류 발생", e);
-            return "ERROR";
+            throw new CustomException(ErrorCode.SMS_SEND_FAILED);
         }
     }
 }

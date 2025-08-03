@@ -1,31 +1,37 @@
 package com.github.hjgf0624.sideproject.exception;
 
-import com.github.hjgf0624.sideproject.dto.ValidationErrorResponseDTO;
+import com.github.hjgf0624.sideproject.dto.ErrorResponseDTO;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(CustomValidationException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Map<String, Object> handleCustomValidationException(CustomValidationException e) {
-        Map<String, Object> response = new HashMap<>();
-        response.put("success", false);
-        response.put("message", e.getMessage());
-
-        if (e.getErrors() != null && !e.getErrors().isEmpty()) {
-            response.put("errors", e.getErrors());
-        }
-
-        return response;
+    @ExceptionHandler(CustomException.class)
+    public ResponseEntity<ErrorResponseDTO> handleCustomException(CustomException ex) {
+        ErrorResponseDTO response = new ErrorResponseDTO(
+                ex.getStatus(),
+                ex.getCode(),
+                ex.getMessage()
+        );
+        return ResponseEntity
+                .status(ex.getStatus())
+                .body(response);
     }
 
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponseDTO> handleValidationException(MethodArgumentNotValidException ex) {
+        String errorMessage = ex.getBindingResult().getFieldError().getDefaultMessage();
+
+        ErrorResponseDTO errorResponse = ErrorResponseDTO.of(
+                HttpStatus.BAD_REQUEST.value(),
+                "COMMON_001",
+                errorMessage
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
 }

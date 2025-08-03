@@ -2,6 +2,8 @@ package com.github.hjgf0624.sideproject.config.security;
 
 import com.github.hjgf0624.sideproject.config.security.oauth.CustomOAuth2UserService;
 import com.github.hjgf0624.sideproject.config.security.oauth.OAuth2SuccessHandler;
+import com.github.hjgf0624.sideproject.exception.JwtAccessDeniedHandler;
+import com.github.hjgf0624.sideproject.exception.JwtAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,9 +33,11 @@ public class SecurityConfig {
     private final JwtTokenProvider jwtTokenProvider;
     private final StringRedisTemplate redisTemplate;
     private final CustomOAuth2UserService customOAuth2UserService;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
 
     private final String[] AUTH_WHITELIST = {
-            "/v3/api-docs/**", "/swagger-ui/**", "/swagger-resources/**"
+            "/v3/api-docs/**", "/swagger-ui/**", "/swagger-resources/**", "/api/auth/**"
     };
 
     @Bean
@@ -70,7 +74,12 @@ public class SecurityConfig {
         http.authorizeHttpRequests(auth -> auth
                         .requestMatchers(AUTH_WHITELIST).permitAll()
                         .requestMatchers("/oauth2/**").permitAll()
-                        .anyRequest().permitAll());
+                        .anyRequest().hasRole("USER"));
+
+        http.exceptionHandling(exception -> exception
+                .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                .accessDeniedHandler(jwtAccessDeniedHandler)
+        );
 
         return http.build();
     }

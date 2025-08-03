@@ -1,5 +1,7 @@
 package com.github.hjgf0624.sideproject.service;
 
+import com.github.hjgf0624.sideproject.exception.CustomException;
+import com.github.hjgf0624.sideproject.exception.ErrorCode;
 import com.google.firebase.messaging.*;
 import kotlinx.serialization.Required;
 import lombok.RequiredArgsConstructor;
@@ -19,8 +21,7 @@ public class FCMService {
 
     public void sendBroadcastMessage(String title, String content, List<String> tokens) {
         if (tokens == null || tokens.isEmpty()) {
-            System.out.println("전송할 토큰이 없습니다.");
-            return;
+            throw new CustomException(ErrorCode.FCM_NO_TOKENS);
         }
 
         MulticastMessage message = MulticastMessage.builder()
@@ -38,13 +39,14 @@ public class FCMService {
             log.info("FCM 메시지 전송 성공: {}명", successCnt);
 
             response.getResponses().forEach(resp -> {
-                if(!resp.isSuccessful()) {
-                    log.error("FCM 메시지 전송 실패 : {}", resp.getException().getMessage());
+                if (!resp.isSuccessful()) {
+                    log.error("FCM 메시지 전송 실패: {}", resp.getException().getMessage());
                 }
             });
 
         } catch (FirebaseMessagingException e) {
             log.error("전체 FCM 전송 중 예외 발생", e);
+            throw new CustomException(ErrorCode.FCM_SEND_FAILED);
         }
     }
 }

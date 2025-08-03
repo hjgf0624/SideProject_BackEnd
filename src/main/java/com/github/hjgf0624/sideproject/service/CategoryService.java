@@ -3,6 +3,8 @@ package com.github.hjgf0624.sideproject.service;
 import com.github.hjgf0624.sideproject.dto.BaseResponseDTO;
 import com.github.hjgf0624.sideproject.dto.CategorySimpleDTO;
 import com.github.hjgf0624.sideproject.entity.CategoryEntity;
+import com.github.hjgf0624.sideproject.exception.CustomException;
+import com.github.hjgf0624.sideproject.exception.ErrorCode;
 import com.github.hjgf0624.sideproject.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,11 +23,19 @@ public class CategoryService {
                 .map(category -> new CategorySimpleDTO(category.getCategoryId(), category.getCategoryName()))
                 .toList();
 
+        if (categories.isEmpty()) {
+            throw new CustomException(ErrorCode.CATEGORY_NOT_FOUND);
+        }
+
         return BaseResponseDTO.success(categories, "category");
     }
 
     public BaseResponseDTO<CategorySimpleDTO> getCategoryByCategoryName(String categoryName) {
         CategoryEntity categoryEntity = categoryRepository.findByCategoryName(categoryName);
+
+        if (categoryEntity == null) {
+            throw new CustomException(ErrorCode.CATEGORY_NOT_FOUND);
+        }
 
         return BaseResponseDTO.success(new CategorySimpleDTO(categoryEntity.getCategoryId(), categoryEntity.getCategoryName()), "category");
     }

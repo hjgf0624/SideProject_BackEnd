@@ -1,5 +1,7 @@
 package com.github.hjgf0624.sideproject.service;
 
+import com.github.hjgf0624.sideproject.exception.CustomException;
+import com.github.hjgf0624.sideproject.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -20,7 +22,11 @@ public class EmailAuthService {
         message.setSubject("이메일 인증 코드");
         message.setText("인증 코드: " + code);
 
-        mailSender.send(message);
+        try {
+            mailSender.send(message);
+        } catch (Exception e) {
+            throw new CustomException(ErrorCode.EMAIL_SEND_FAILED);
+        }
         return code; // 프론트엔드에서 이 코드를 클라이언트에 보관
     }
 

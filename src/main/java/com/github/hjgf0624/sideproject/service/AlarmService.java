@@ -7,6 +7,8 @@ import com.github.hjgf0624.sideproject.entity.MessageCategoryEntity;
 import com.github.hjgf0624.sideproject.entity.MessageEntity;
 import com.github.hjgf0624.sideproject.entity.ParticipantTypeEntity;
 import com.github.hjgf0624.sideproject.entity.UserEntity;
+import com.github.hjgf0624.sideproject.exception.CustomException;
+import com.github.hjgf0624.sideproject.exception.ErrorCode;
 import com.github.hjgf0624.sideproject.repository.MessageRepository;
 import com.github.hjgf0624.sideproject.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,16 +27,12 @@ public class AlarmService {
     public List<AlarmResponseDTO> getAlarmList(String userId) {
         UserEntity user = userRepository.findByUserId(userId);
 
+        if (user == null) {
+            throw new CustomException(ErrorCode.AUTH_002); // 사용자 없음
+        }
+
         double longitude = user.getLongitude();
         double latitude = user.getLatitude();
-
-        // 게시글 반경 10km 이내의 유저를 구하는 로직!
-//        double minLat = savedMessage.getLatitude() - 0.09;
-//        double maxLat = savedMessage.getLatitude() + 0.09;
-//        double minLng = savedMessage.getLongitude() - 0.09;
-//        double maxLng = savedMessage.getLongitude() + 0.09;
-//
-//        List<UserEntity> nearUsers = userRepository.findUsersWithinLatLngRange(minLat, maxLat, minLng, maxLng);
 
         // 가까운 메시지를 찾기 위해 적절한 거리 기준을 설정
         List<MessageEntity> messages = messageRepository.findNearbyMessages(longitude, latitude);

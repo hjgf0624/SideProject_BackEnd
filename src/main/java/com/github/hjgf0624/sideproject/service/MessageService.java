@@ -5,13 +5,14 @@ import com.github.hjgf0624.sideproject.dto.msg.MsgDetailRequestDTO;
 import com.github.hjgf0624.sideproject.dto.msg.MsgDetailResponseDTO;
 import com.github.hjgf0624.sideproject.dto.user.UserProfileDTO;
 import com.github.hjgf0624.sideproject.entity.*;
+import com.github.hjgf0624.sideproject.exception.CustomException;
+import com.github.hjgf0624.sideproject.exception.ErrorCode;
 import com.github.hjgf0624.sideproject.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import com.github.hjgf0624.sideproject.dto.BaseResponseDTO;
 import com.github.hjgf0624.sideproject.dto.LocationDTO;
 import com.github.hjgf0624.sideproject.dto.message.*;
-import com.github.hjgf0624.sideproject.exception.CustomValidationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,11 +30,11 @@ public class MessageService {
     private final CategoryRepository categoryRepository;
     private final MessageCategoryRepository messageCategoryRepository;
 
-    public MessageEntity toEntity(MessageRequestDTO messageRequestDTO) {
+    public MessageEntity toEntity(String userId, MessageRequestDTO messageRequestDTO) {
         MessageEntity messageEntity = new MessageEntity();
 
         // 메세지의 카테고리가 현재 null, 회의 진행해야 할듯 함
-        messageEntity.setUserId(messageRequestDTO.getUserId());
+        messageEntity.setUserId(userId);
         messageEntity.setTitle(messageRequestDTO.getTitle());
         messageEntity.setContent(messageRequestDTO.getContent());
 
@@ -50,6 +51,10 @@ public class MessageService {
 
     public BaseResponseDTO<List<MessageGetResponseDTO>> getMessages(String userId, Double longitude, Double latitude) {
         List<MessageEntity> nearMessages = messageRepository.findNearbyMessages(longitude, latitude);
+
+        if (nearMessages == null || nearMessages.isEmpty()) {
+            throw new CustomException(ErrorCode.MSG_001);
+        }
 
         List<MessageGetResponseDTO> responseDTO = nearMessages.stream()
                 .map(msg -> MessageGetResponseDTO.builder()
@@ -90,13 +95,8 @@ public class MessageService {
     }
 
     public MsgDetailResponseDTO getMessageDetail(MsgDetailRequestDTO request) {
-        Optional<MessageEntity> messageOpt = messageRepository.findById(request.getMessageId());
-
-        if (messageOpt.isEmpty()) {
-            throw new RuntimeException("메시지를 찾을 수 없습니다.");
-        }
-
-        MessageEntity message = messageOpt.get();
+        MessageEntity message = messageRepository.findById(request.getMessageId())
+                .orElseThrow(() -> new CustomException(ErrorCode.MSG_001)); // 메시지를 찾을 수 없습니다.
 
         return MsgDetailResponseDTO.builder()
                 .success(true)
@@ -131,12 +131,13 @@ public class MessageService {
     }
 
     @Transactional
-    public BaseResponseDTO<Long> saveMessage(MessageRequestDTO dto) {
-        MessageEntity message = toEntity(dto);
+    public BaseResponseDTO<Long> saveMessage(String userId, MessageRequestDTO dto) {
+        MessageEntity message = toEntity(userId, dto);
         MessageEntity savedMessage = messageRepository.save(message);
 
         for (Long categoryId:dto.getCategories()) {
-            CategoryEntity category = categoryRepository.findById(categoryId).orElse(null);
+            CategoryEntity category = categoryRepository.findById(categoryId)
+                    .orElseThrow(() -> new CustomException(ErrorCode.MSG_005)); // 카테고리를 찾을 수 없습니다.
 
             MessageCategoryEntity msgCategory = new MessageCategoryEntity();
             msgCategory.setId(new MessageCategoryId(savedMessage.getMessageId(), categoryId));
@@ -149,7 +150,7 @@ public class MessageService {
         MessageParticipantId participantId = new MessageParticipantId(savedMessage.getUserId(), savedMessage.getMessageId());
         MessageParticipantEntity participant = MessageParticipantEntity.builder()
                 .id(participantId)
-                .user(userRepository.findByUserId(dto.getUserId()))
+                .user(userRepository.findByUserId(userId))
                 .message(message)
                 .participantType(ParticipantTypeEntity.PUBLISHER)
                 .build();
@@ -161,11 +162,11 @@ public class MessageService {
                 .addField("isExist", false);
     }
 
-    public BaseResponseDTO<List<MessageGetResponseDTO>> getMessagesByDate(String userId, MessageGetRequestDTO dto) throws CustomValidationException {
+    public BaseResponseDTO<List<MessageGetResponseDTO>> getMessagesByDate(String userId, MessageGetRequestDTO dto) {
         List<MessageEntity> messages = messageRepository.findUserMessagesByDate(userId, dto.getDate());
 
         if (messages.isEmpty()) {
-            return null;
+            throw new CustomException(ErrorCode.MSG_001);
         }
 
         List<MessageGetResponseDTO> responseDTO = messages.stream()
@@ -192,18 +193,18 @@ public class MessageService {
         return BaseResponseDTO.success(responseDTO, "message");
     }
 
-    public ResponseEntity<Map<String, Boolean>> joinMessage(JoinMessageDTO dto) throws CustomValidationException {
-        UserEntity user = userRepository.findById(dto.getUserId()).orElse(null);
-        MessageEntity message = messageRepository.findById(dto.getMessageId()).orElse(null);
+    public ResponseEntity<Map<String, Boolean>> joinMessage(String userId, JoinMessageDTO dto) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.AUTH_005)); // 존재하지 않는 사용자입니다.
 
-        if (user == null || message == null) {
-            throw new CustomValidationException("존재하지 않는 유저 혹은 메세지 입니다.");
-        }
+        MessageEntity message = messageRepository.findById(dto.getMessageId())
+                .orElseThrow(() -> new CustomException(ErrorCode.MSG_001)); // 메시지를 찾을 수 없습니다.
 
         MessageParticipantId participantId = new MessageParticipantId(user.getUserId(), message.getMessageId());
         Optional<MessageParticipantEntity> optionalMessageParticipant = messageParticipantRepository.findById(participantId);
+
         if (optionalMessageParticipant.isPresent()) {
-            throw new CustomValidationException("이미 참여한 메세지 입니다.");
+            throw new CustomException(ErrorCode.MSG_004); // 이미 참여한 메시지입니다.
         }
 
         MessageParticipantEntity participant = MessageParticipantEntity.builder()
@@ -218,10 +219,15 @@ public class MessageService {
         return ResponseEntity.ok(Map.of("success", true));
     }
 
-    public BaseResponseDTO<List<String>> getMessageDate(String userId) throws CustomValidationException {
+    public BaseResponseDTO<List<String>> getMessageDate(String userId) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         List<MessageParticipantEntity> participantEntities = messageParticipantRepository.findAllByUser_UserId(userId);
+
+        if (participantEntities == null || participantEntities.isEmpty()) {
+            throw new CustomException(ErrorCode.MSG_001); // 메시지를 찾을 수 없습니다.
+        }
+
         List<String> messageDates = participantEntities.stream()
                 .map(participant -> participant.getMessage().getMessageId())
                 .map(id -> messageRepository.findById(id).map(MessageEntity::getMeetingDateTime))

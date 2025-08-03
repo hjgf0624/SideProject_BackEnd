@@ -1,6 +1,7 @@
 package com.github.hjgf0624.sideproject.dto.user;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,5 +14,6 @@ public class UserFindIdDTO {
             description = "휴대폰 번호",
             example = "010-1234-5678"
     )
+    @NotBlank(message = "전화번호는 필수입니다.")
     private String phoneNum;
 }

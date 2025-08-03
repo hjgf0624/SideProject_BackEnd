@@ -19,11 +19,6 @@ import java.util.List;
 @Schema(description = "메시지 요청 DTO")
 public class MessageRequestDTO {
 
-    @Schema(description = "메시지를 작성한 사용자 ID", example = "user_12345")
-    @JsonProperty("user_id")
-    @NotBlank(message = "user_id는 필수 값입니다.")
-    private String userId;
-
     @Schema(description = "메시지 제목", example = "스터디 모집합니다!")
     @JsonProperty("title")
     @NotBlank(message = "title은 필수 값입니다.")

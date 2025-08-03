@@ -3,6 +3,8 @@ package com.github.hjgf0624.sideproject.service;
 import com.github.hjgf0624.sideproject.dto.message.MessageBroadcastRequestDTO;
 import com.github.hjgf0624.sideproject.entity.MessageEntity;
 import com.github.hjgf0624.sideproject.entity.UserEntity;
+import com.github.hjgf0624.sideproject.exception.CustomException;
+import com.github.hjgf0624.sideproject.exception.ErrorCode;
 import com.github.hjgf0624.sideproject.repository.MessageRepository;
 import com.github.hjgf0624.sideproject.repository.UserFcmTokenRepository;
 import com.github.hjgf0624.sideproject.repository.UserRepository;
@@ -33,17 +35,17 @@ public class MessageBroadcastService {
     public Map<String, Object> broadcastMessage(MessageBroadcastRequestDTO request) {
         // 메시지 가져오기
         MessageEntity message = messageRepository.findById(request.getMessageId())
-                .orElseThrow(() -> new RuntimeException("메시지를 찾을 수 없습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.MSG_001)); // 메시지를 찾을 수 없습니다.
 
         double longitude = message.getLongitude();
         double latitude = message.getLatitude();
 
-        System.out.println("쿼리용 위도: " + latitude + ", 경도: " + longitude);
-
         // 10km 내 사용자 조회
         List<UserEntity> nearbyUsers = userRepository.findNearbyUsers(longitude, latitude);
 
-        System.out.println(nearbyUsers);
+        if (nearbyUsers == null || nearbyUsers.isEmpty()) {
+            throw new CustomException(ErrorCode.MSG_006); // 브로드캐스트 대상 유저 없음 (신규 코드 정의 필요)
+        }
 
         // FCM 토큰 수집
         List<String> fcmTokens = nearbyUsers.stream()
@@ -51,6 +53,12 @@ public class MessageBroadcastService {
                 .filter(Optional::isPresent)
                 .map(optional -> optional.get().getFcmToken())
                 .toList();
+
+
+        if (fcmTokens.isEmpty()) {
+            throw new CustomException(ErrorCode.MSG_007); // 유저에 대한 FCM 토큰이 존재하지 않음
+        }
+
         // 토큰을 이용해 메시지 전송
         for (UserEntity user : nearbyUsers) {
             userFcmTokenRepository.findByUser(user).ifPresent(userFcmToken -> {
@@ -63,6 +71,7 @@ public class MessageBroadcastService {
                 } catch (Exception e) {
                     // 예외 처리 (FCM 전송 실패시 등, printStackTrace 대신 다른 Logger 사용해야 할 듯)
                     logger.error("예외 발생 : {}",e.getMessage(), e);
+                    throw new CustomException(ErrorCode.ALARM_004); // 메시지 브로드캐스트 실패
                 }
             });
         }

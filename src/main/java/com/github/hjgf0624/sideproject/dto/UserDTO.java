@@ -12,8 +12,6 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 public class UserDTO {
-
-
     private Long id;
     private List<String> fcmToken;
 }

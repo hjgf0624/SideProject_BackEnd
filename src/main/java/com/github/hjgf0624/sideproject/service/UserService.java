@@ -1,22 +1,13 @@
 package com.github.hjgf0624.sideproject.service;
 
-import com.github.hjgf0624.sideproject.dto.BaseResponseDTO;
-import com.github.hjgf0624.sideproject.dto.user.UserLoginDTO;
-import com.github.hjgf0624.sideproject.dto.user.UserLoginResponseDTO;
-import com.github.hjgf0624.sideproject.dto.user.UserRegisterDTO;
-import com.github.hjgf0624.sideproject.dto.user.UserRegisterResponseDTO;
-import com.github.hjgf0624.sideproject.entity.*;
-import com.github.hjgf0624.sideproject.exception.CustomValidationException;
-
 import com.github.hjgf0624.sideproject.config.security.JwtTokenProvider;
+import com.github.hjgf0624.sideproject.dto.BaseResponseDTO;
 import com.github.hjgf0624.sideproject.dto.LocationDTO;
 import com.github.hjgf0624.sideproject.dto.user.*;
-import com.github.hjgf0624.sideproject.entity.RoleEntity;
-import com.github.hjgf0624.sideproject.entity.UserEntity;
-import com.github.hjgf0624.sideproject.repository.RefreshTokenRepository;
-import com.github.hjgf0624.sideproject.repository.RoleRepository;
-import com.github.hjgf0624.sideproject.repository.UserFcmTokenRepository;
-import com.github.hjgf0624.sideproject.repository.UserRepository;
+import com.github.hjgf0624.sideproject.entity.*;
+import com.github.hjgf0624.sideproject.exception.CustomException;
+import com.github.hjgf0624.sideproject.exception.ErrorCode;
+import com.github.hjgf0624.sideproject.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -24,39 +15,31 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.*;
 import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
+
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-
     private final AwsS3Service awsS3Service;
     private final RefreshTokenRepository refreshTokenRepository;
-
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
-
     private final UserFcmTokenRepository userFcmTokenRepository;
+    private final UserFcmTokenService userFcmTokenService;
 
     private static final String EMAIL_REGEX = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
     private static final String BIRTH_REGEX = "^(19|20)\\d\\d-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$";
-    private final UserFcmTokenService userFcmTokenService;
 
     public UserEntity toEntity(UserRegisterDTO dto, MultipartFile file) throws IOException {
-        String profileImageUrl = file != null ?
-                awsS3Service.uploadFile(file, dto.getEmail())
-                : null;
-
+        String profileImageUrl = file != null ? awsS3Service.uploadFile(file, dto.getEmail()) : null;
         UserEntity userEntity = new UserEntity();
 
         userEntity.setUserId(dto.getEmail());
         userEntity.setUserPw(passwordEncoder.encode(dto.getPassword()));
-//        userEntity.setFirebaseToken(dto.getFcmToken());
         userEntity.setBirthdate(dto.getBirthDate());
 
         if (dto.getProfile() != null) {
@@ -66,7 +49,6 @@ public class UserService {
             userEntity.setSex(dto.getProfile().getSex());
             userEntity.setPhoneNumber(dto.getProfile().getPhoneNumber());
             userEntity.setBirthdate(dto.getProfile().getBirthdate());
-
             userEntity.setLatitude(dto.getProfile().getLocation().getLatitude());
             userEntity.setLongitude(dto.getProfile().getLocation().getLongitude());
         }
@@ -77,7 +59,6 @@ public class UserService {
     public String logout(UserLogoutDTO dto) {
         String accessToken = dto.getAccessToken();
         String userId = jwtTokenProvider.getUserPK(accessToken);
-
         refreshTokenRepository.deleteRefreshToken(userId);
 
         Date expirationDate = jwtTokenProvider.getExpiration(accessToken);
@@ -91,172 +72,149 @@ public class UserService {
         return "success";
     }
 
-    public BaseResponseDTO<UserLoginResponseDTO> refreshAccessToken(ReIssueTokenDTO reIssueTokenDTO)
-            throws CustomValidationException {
-
-        String accessToken = reIssueTokenDTO.getAccessToken();
-        String refreshToken = reIssueTokenDTO.getRefreshToken();
-
+    public BaseResponseDTO<UserLoginResponseDTO> refreshAccessToken(ReIssueTokenDTO dto) {
+        String accessToken = dto.getAccessToken();
+        String refreshToken = dto.getRefreshToken();
         String userId = jwtTokenProvider.getUserPK(accessToken);
 
         if (jwtTokenProvider.isBlacklisted(accessToken)) {
-            throw new CustomValidationException("Token is blacklisted");
+            throw new CustomException(ErrorCode.AUTH_006);
         }
 
         if (!jwtTokenProvider.validateRefreshToken(refreshToken)) {
-            throw new CustomValidationException("Invalid refresh token");
+            throw new CustomException(ErrorCode.AUTH_006);
         }
 
         if (!jwtTokenProvider.isTokenExpired(accessToken)) {
-            throw new CustomValidationException("Not expired access token");
+            throw new CustomException(ErrorCode.AUTH_006);
         }
 
         if (!isValidRefreshToken(userId, refreshToken)) {
-            throw new CustomValidationException("Token Expired");
+            throw new CustomException(ErrorCode.AUTH_006);
         }
 
-        UserEntity userEntity = userRepository.findByUserId(userId);
+        UserEntity user = userRepository.findByUserId(userId);
+        List<String> roles = user.getRoles().stream().map(RoleEntity::getRoleName).toList();
 
-        List<String> authList = new ArrayList<>();
-        for (RoleEntity role : userEntity.getRoles()) {
-            authList.add(role.getRoleName());
-        }
+        String reIssuedAccessToken = jwtTokenProvider.createToken(user.getUserId(), roles);
 
-        String reIssueToken = jwtTokenProvider.createToken(userEntity.getUserId(), authList);
-
-        UserLoginResponseDTO dto = UserLoginResponseDTO.builder()
-                .email(userEntity.getUserId())
-                .name(userEntity.getName())
+        UserLoginResponseDTO response = UserLoginResponseDTO.builder()
+                .email(user.getUserId())
+                .name(user.getName())
                 .build();
 
-        return BaseResponseDTO.success(dto, "user")
-                .addField("accessToken", reIssueToken)
+        return BaseResponseDTO.success(response, "user")
+                .addField("accessToken", reIssuedAccessToken)
                 .addField("refreshToken", refreshToken)
                 .addField("message", "Login successful");
     }
 
     public boolean isValidRefreshToken(String userId, String refreshToken) {
-        String savedToken = refreshTokenRepository.getRefreshToken(userId);
-        return savedToken != null && savedToken.equals(refreshToken);
+        String saved = refreshTokenRepository.getRefreshToken(userId);
+        return saved != null && saved.equals(refreshToken);
     }
 
     public BaseResponseDTO<UserLoginResponseDTO> login(UserLoginDTO dto) {
-        UserEntity savedUserInfo = userRepository.findByUserId(dto.getEmail());
+        UserEntity user = userRepository.findByUserId(dto.getEmail());
 
-        if (savedUserInfo == null) {
-            throw new CustomValidationException("User not found");
-        }
-
-        String savedPw = savedUserInfo.getUserPw();
-        String inputPw = dto.getPassword();
-
-        if (!passwordEncoder.matches(inputPw, savedPw)) {
-            throw new CustomValidationException("Invalid credentials");
+        if (user == null || !passwordEncoder.matches(dto.getPassword(), user.getUserPw())) {
+            throw new CustomException(ErrorCode.AUTH_001);
         }
 
         if (dto.getFcmToken() == null) {
-            throw new CustomValidationException("FCM token is null");
+            throw new CustomException(ErrorCode.AUTH_009);
         }
 
         userFcmTokenService.saveOrUpdateToken(dto.getEmail(), dto.getFcmToken());
 
-        List<String> sAuthList = new ArrayList<>();
-        for (RoleEntity role : savedUserInfo.getRoles()) {
-            sAuthList.add(role.getRoleName());
-        }
+        List<String> roles = user.getRoles().stream().map(RoleEntity::getRoleName).toList();
+        String accessToken = jwtTokenProvider.createToken(user.getUserId(), roles);
+        String refreshToken = jwtTokenProvider.createRefreshToken(user.getUserId());
 
-        String accessToken = jwtTokenProvider.createToken(String.valueOf(savedUserInfo.getUserId()), sAuthList);
-        String refreshToken = jwtTokenProvider.createRefreshToken(savedUserInfo.getUserId());
+        refreshTokenRepository.saveRefreshToken(user.getUserId(), refreshToken);
 
-        refreshTokenRepository.saveRefreshToken(savedUserInfo.getUserId(), refreshToken);
-
-        UserLoginResponseDTO userResponseDto = UserLoginResponseDTO.builder()
-                .email(savedUserInfo.getUserId())
-                .name(savedUserInfo.getName())
+        UserLoginResponseDTO response = UserLoginResponseDTO.builder()
+                .email(user.getUserId())
+                .name(user.getName())
                 .build();
 
-        return BaseResponseDTO.success(userResponseDto, "user")
+        return BaseResponseDTO.success(response, "user")
                 .addField("accessToken", accessToken)
                 .addField("refreshToken", refreshToken)
                 .addField("message", "Login successful");
     }
 
     @Transactional
-    public BaseResponseDTO<UserRegisterResponseDTO> register(UserRegisterDTO dto, MultipartFile file)
-            throws CustomValidationException, IOException {
-        Map<String, String> errors = new HashMap<>();
-        UserEntity isUser = userRepository.findByUserId(dto.getEmail());
-
-        if (isUser != null) {
-            errors.put("email", "Email already in use");
-            throw new CustomValidationException(errors, "Validation fail");
+    public BaseResponseDTO<UserRegisterResponseDTO> register(UserRegisterDTO dto, MultipartFile file) throws IOException {
+        if (userRepository.findByUserId(dto.getEmail()) != null) {
+            throw new CustomException(ErrorCode.AUTH_002);
         }
 
-        if(!dto.getPassword().matches(dto.getConfirmPassword())) {
-            errors.put("password", "비밀번호가 일치하지 않습니다.");
-        }
-        if(!Pattern.matches(EMAIL_REGEX, dto.getEmail())) {
-            errors.put("email", "이메일 형식이 올바르지 않습니다.");
-        }
-        if(!Pattern.matches(BIRTH_REGEX, dto.getBirthDate())) {
-            errors.put("birth_date", "생년월일 형식이 올바르지 않습니다.");
+        if (!dto.getPassword().equals(dto.getConfirmPassword())) {
+            throw new CustomException(ErrorCode.AUTH_001);
         }
 
-        if (!errors.isEmpty()) {
-            throw new CustomValidationException(errors, "Validation fail");
+        if (!Pattern.matches(EMAIL_REGEX, dto.getEmail())) {
+            throw new CustomException(ErrorCode.AUTH_001);
         }
 
-        UserEntity userEntity = toEntity(dto, file);
-        RoleEntity roleEntity = roleRepository.findByRoleName("USER");
+        if (!Pattern.matches(BIRTH_REGEX, dto.getBirthDate())) {
+            throw new CustomException(ErrorCode.AUTH_001);
+        }
 
-        userEntity.addRole(roleEntity);
-        UserEntity savedUser = userRepository.save(userEntity);
+        UserEntity user = toEntity(dto, file);
+        RoleEntity role = roleRepository.findByRoleName("USER");
 
-        UserRegisterResponseDTO userDataDto = UserRegisterResponseDTO.builder()
-                .userId(savedUser.getUserId())
+        user.addRole(role);
+        UserEntity saved = userRepository.save(user);
+
+        UserRegisterResponseDTO response = UserRegisterResponseDTO.builder()
+                .userId(saved.getUserId())
                 .firebaseToken(dto.getFcmToken())
                 .profile(UserProfileDTO.builder()
-                        .name(savedUser.getName())
-                        .nickname(savedUser.getNickname())
-                        .profileImageUrl(savedUser.getProfileImageUrl())
-                        .phoneNumber(savedUser.getPhoneNumber())
-                        .sex(savedUser.getSex())
-                        .birthdate(savedUser.getBirthdate())
+                        .name(saved.getName())
+                        .nickname(saved.getNickname())
+                        .profileImageUrl(saved.getProfileImageUrl())
+                        .phoneNumber(saved.getPhoneNumber())
+                        .sex(saved.getSex())
+                        .birthdate(saved.getBirthdate())
                         .location(LocationDTO.builder()
-                                        .longitude(savedUser.getLongitude())
-                                        .latitude(savedUser.getLatitude()).build())
+                                .latitude(saved.getLatitude())
+                                .longitude(saved.getLongitude())
+                                .build())
                         .build())
-                .createdAt(savedUser.getCreatedAt())
+                .createdAt(saved.getCreatedAt())
                 .build();
 
-        return BaseResponseDTO.success(userDataDto, "data").addField("message", "Registration successful");
+        return BaseResponseDTO.success(response, "data").addField("message", "Registration successful");
     }
 
     @Transactional
-    public BaseResponseDTO<String> updateLocation(UpdateLocationDTO dto) {
-        UserEntity entity = userRepository.findByUserId(dto.getUserId());
+    public BaseResponseDTO<String> updateLocation(String userId, LocationDTO dto) {
+        UserEntity user = userRepository.findByUserId(userId);
+        if (user == null) throw new CustomException(ErrorCode.AUTH_005);
 
-        entity.setLatitude(dto.getLatitude());
-        entity.setLongitude(dto.getLongitude());
-
-        userRepository.save(entity);
+        user.setLatitude(dto.getLatitude());
+        user.setLongitude(dto.getLongitude());
+        userRepository.save(user);
 
         return BaseResponseDTO.success("위치 정보 저장 성공.", "message");
     }
 
     public BaseResponseDTO<UserProfileDTO> getProfileInfo(String userId) {
-        UserEntity userEntity = userRepository.findByUserId(userId);
+        UserEntity user = userRepository.findByUserId(userId);
+        if (user == null) throw new CustomException(ErrorCode.AUTH_005);
 
         UserProfileDTO dto = UserProfileDTO.builder()
-                .name(userEntity.getName())
-                .nickname(userEntity.getNickname())
-                .profileImageUrl(userEntity.getProfileImageUrl())
-                .phoneNumber(userEntity.getPhoneNumber())
-                .birthdate(userEntity.getBirthdate())
-                .sex(userEntity.getSex())
+                .name(user.getName())
+                .nickname(user.getNickname())
+                .profileImageUrl(user.getProfileImageUrl())
+                .phoneNumber(user.getPhoneNumber())
+                .birthdate(user.getBirthdate())
+                .sex(user.getSex())
                 .location(LocationDTO.builder()
-                        .latitude(userEntity.getLatitude())
-                        .longitude(userEntity.getLongitude())
+                        .latitude(user.getLatitude())
+                        .longitude(user.getLongitude())
                         .build())
                 .build();
 
@@ -264,66 +222,58 @@ public class UserService {
     }
 
     @Transactional
-    public BaseResponseDTO<UserProfileDTO> updateProfileInfo(UserProfileUpdateDTO dto, MultipartFile file) throws IOException {
+    public BaseResponseDTO<UserProfileDTO> updateProfileInfo(String userId, UserProfileDTO dto, MultipartFile file) throws IOException {
+        UserEntity user = userRepository.findByUserId(userId);
+        if (user == null) throw new CustomException(ErrorCode.AUTH_005);
 
-        UserEntity userEntity = userRepository.findByUserId(dto.getUserId());
-        String profileImageUrl = file != null ? awsS3Service.uploadFile(file, dto.getUserId()) : userEntity.getProfileImageUrl();
+        String profileImageUrl = file != null ? awsS3Service.uploadFile(file, userId) : user.getProfileImageUrl();
 
-        userEntity.setName(dto.getName());
-        userEntity.setNickname(dto.getNickname());
-        userEntity.setPhoneNumber(dto.getPhoneNumber());
-        userEntity.setBirthdate(dto.getBirthdate());
-        userEntity.setSex(dto.getSex());
-        userEntity.setProfileImageUrl(profileImageUrl);
+        user.setName(dto.getName());
+        user.setNickname(dto.getNickname());
+        user.setPhoneNumber(dto.getPhoneNumber());
+        user.setBirthdate(dto.getBirthdate());
+        user.setSex(dto.getSex());
+        user.setProfileImageUrl(profileImageUrl);
 
-        UserEntity savedUser = userRepository.save(userEntity);
+        userRepository.save(user);
 
-        UserProfileDTO updateDTO = UserProfileDTO.builder()
-                .name(savedUser.getName())
-                .nickname(savedUser.getNickname())
-                .profileImageUrl(savedUser.getProfileImageUrl())
-                .phoneNumber(savedUser.getPhoneNumber())
-                .birthdate(savedUser.getBirthdate())
-                .sex(savedUser.getSex())
+        UserProfileDTO updated = UserProfileDTO.builder()
+                .name(user.getName())
+                .nickname(user.getNickname())
+                .profileImageUrl(user.getProfileImageUrl())
+                .phoneNumber(user.getPhoneNumber())
+                .birthdate(user.getBirthdate())
+                .sex(user.getSex())
                 .build();
 
-        return BaseResponseDTO.success(updateDTO, "user_profile").addField("message", "프로필 정보 업데이트 성공.");
+        return BaseResponseDTO.success(updated, "user_profile").addField("message", "프로필 정보 업데이트 성공.");
     }
 
-    // 2025.06.18 작성
     @Transactional
     public BaseResponseDTO<String> saveOrUpdateFcmToken(String userId, String fcmToken) {
-        UserEntity userEntity = userRepository.findByUserId(userId);
-        if (userEntity == null){
-            throw new RuntimeException("사용자를 찾을 수 없습니다.");
-        }
+        UserEntity user = userRepository.findByUserId(userId);
+        if (user == null) throw new CustomException(ErrorCode.AUTH_005);
 
-        userFcmTokenRepository.findByUser(userEntity).ifPresentOrElse(
+        userFcmTokenRepository.findByUser(user).ifPresentOrElse(
                 existing -> {
                     existing.setFcmToken(fcmToken);
                     userFcmTokenRepository.save(existing);
                 },
                 () -> {
-                    UserFcmTokenEntity userFcmTokenEntity = UserFcmTokenEntity.builder()
-                            .user(userEntity)
+                    UserFcmTokenEntity newToken = UserFcmTokenEntity.builder()
+                            .user(user)
                             .fcmToken(fcmToken)
                             .build();
-                    userFcmTokenRepository.save(userFcmTokenEntity);
-                }
-        );
-        return BaseResponseDTO.success("FCM 토큰 저장 / 갱신 완료", "fcm_token")
-                .addField("message", "FCM 토큰 저장 성공");
+                    userFcmTokenRepository.save(newToken);
+                });
+
+        return BaseResponseDTO.success("FCM 토큰 저장 / 갱신 완료", "fcm_token").addField("message", "FCM 토큰 저장 성공");
     }
 
     @Transactional
-    public String deleteMemberShip(String accessToken, String userId) throws CustomValidationException {
-        Map<String, String> errors = new HashMap<>();
-        UserEntity userEntity = userRepository.findByUserId(userId);
-
-        if (userEntity == null){
-            errors.put("email", "사용자를 찾을 수 없습니다.");
-            throw new CustomValidationException(errors, "Validation fails");
-        }
+    public String deleteMemberShip(String accessToken, String userId) {
+        UserEntity user = userRepository.findByUserId(userId);
+        if (user == null) throw new CustomException(ErrorCode.AUTH_005);
 
         refreshTokenRepository.deleteRefreshToken(userId);
 
@@ -335,12 +285,10 @@ public class UserService {
             userFcmTokenService.deleteToken(userId);
         }
 
-        userEntity.getParticipants().clear();
-        userEntity.getRoles().clear();
+        user.getParticipants().clear();
+        user.getRoles().clear();
 
-        System.out.println("삭제 시도: " + userId);
         userRepository.deleteById(userId);
-
         return "success";
     }
 }
